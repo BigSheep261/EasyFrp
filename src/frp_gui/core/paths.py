@@ -1,4 +1,4 @@
-"""Shared project path definitions."""
+"""项目共用路径定义。"""
 
 from pathlib import Path
 
@@ -11,6 +11,6 @@ RUNTIME_DIR = PROJECT_ROOT / "runtime"
 
 
 def ensure_runtime_directories() -> None:
-    """Create directories that may receive data while the app is running."""
+    """创建应用程序运行时可能写入数据的目录。"""
     for directory in (CONFIG_DIR, LOG_DIR, RUNTIME_DIR):
         directory.mkdir(parents=True, exist_ok=True)

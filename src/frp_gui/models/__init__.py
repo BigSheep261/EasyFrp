@@ -1,1 +1,1 @@
-"""Application data models."""
+"""应用程序数据模型。"""

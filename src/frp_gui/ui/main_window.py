@@ -1,10 +1,10 @@
-"""Main application window."""
+"""应用程序主窗口。"""
 
 from PyQt6.QtWidgets import QMainWindow, QWidget
 
 
 class MainWindow(QMainWindow):
-    """Top-level window for EasyFrp."""
+    """EasyFrp 的顶层窗口。"""
 
     def __init__(self) -> None:
         super().__init__()

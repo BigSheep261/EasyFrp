@@ -1,1 +1,1 @@
-"""Shared utility helpers."""
+"""共用工具辅助函数。"""

@@ -31,3 +31,4 @@ dependencies:
       - pyqt6-qt6==6.11.1
       - pyqt6-sip==13.11.1
       - pywin32-ctypes==0.2.3
+      - qt-material==2.14
