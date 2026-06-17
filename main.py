@@ -1,4 +1,4 @@
-"""EasyFrp application entry point."""
+"""EasyFrp application 入口"""
 
 from pathlib import Path
 import sys
