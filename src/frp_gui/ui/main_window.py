@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.core.paths import APP_ICON_PATH, HEADER_LOGO_PATH, STATUS_ICON_PATH
+from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
 
 
@@ -47,6 +48,7 @@ class MainWindow(QMainWindow):
         self.page_stack = QStackedWidget(self)
 
         self.frpc_control_view = FrpcControlView(self)
+        self.frpc_config_view = FrpcConfigView(self)
 
         self._build_ui()
         self._build_status_bar()
@@ -124,12 +126,14 @@ class MainWindow(QMainWindow):
         )
 
         self.sidebar.addItem(QListWidgetItem("frpc 控制"))
+        self.sidebar.addItem(QListWidgetItem("frpc 配置"))
         sidebar_layout.addWidget(self.logo_label)
         sidebar_layout.addWidget(self.sidebar, stretch=1)
 
     def _build_pages(self) -> None:
         """把页面加入右侧页面容器。"""
         self.page_stack.addWidget(self.frpc_control_view)
+        self.page_stack.addWidget(self.frpc_config_view)
 
     def _build_status_bar(self) -> None:
         """Add the small FRP status icon used by the bottom status bar."""
@@ -153,5 +157,8 @@ class MainWindow(QMainWindow):
         """连接主窗口级别的信号。"""
         self.sidebar.currentRowChanged.connect(self.page_stack.setCurrentIndex)
         self.frpc_control_view.status_message_changed.connect(
+            self.statusBar().showMessage
+        )
+        self.frpc_config_view.status_message_changed.connect(
             self.statusBar().showMessage
         )
