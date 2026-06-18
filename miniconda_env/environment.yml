@@ -32,3 +32,4 @@ dependencies:
       - pyqt6-sip==13.11.1
       - pywin32-ctypes==0.2.3
       - qt-material==2.14
+      - tomlkit==0.15.0

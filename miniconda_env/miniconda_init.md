@@ -26,6 +26,7 @@
 conda install PyQt6==6.11.0
 conda install PyInstaller==6.21.0
 pip install qt-material==2.14
+pip install tomlkit==0.15.0
 ```
 
 #### 安装文件内所有依赖

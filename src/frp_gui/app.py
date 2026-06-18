@@ -3,10 +3,11 @@
 import sys
 from collections.abc import Sequence
 
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from qt_material import apply_stylesheet
 
-from frp_gui.core.paths import ensure_runtime_directories
+from frp_gui.core.paths import APP_ICON_PATH, ensure_runtime_directories
 from frp_gui.ui.main_window import MainWindow
 
 
@@ -16,6 +17,8 @@ def create_application(argv: Sequence[str] | None = None) -> QApplication:
     application = QApplication(arguments)
     application.setApplicationName("EasyFrp")
     application.setOrganizationName("EasyFrp")
+    if APP_ICON_PATH.exists():
+        application.setWindowIcon(QIcon(str(APP_ICON_PATH)))
     apply_stylesheet(application, theme="dark_teal.xml")
     return application
 

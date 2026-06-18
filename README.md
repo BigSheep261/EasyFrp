@@ -47,6 +47,7 @@ EasyFrp
 * Python 3.12+
 * PyQt6
 * qt-material
+* tomlkit
 * Windows 10 / 11
 * FRP 0.6x+
 
@@ -146,6 +147,18 @@ License:
 BSD 2-Clause License
 
 qt-material 用于为 PyQt6 界面提供 Material Design 主题。
+
+### tomlkit
+
+Official Repository:
+
+https://github.com/python-poetry/tomlkit
+
+License:
+
+MIT License
+
+tomlkit 用于读取、修改并写回 FRP TOML 配置文件，同时尽量保留注释、格式和字段顺序。
 
 ---
 
