@@ -8,3 +8,10 @@ class FrpcProxyType(StrEnum):
 
     TCP = "tcp"
     UDP = "udp"
+    XTCP = "xtcp"
+
+class FrpcProxyRole(StrEnum):
+    """JSON配置中，需要按照角色进一步划分的类型"""
+
+    P2P_HOST = "p2p_host"
+    P2P_VISITOR = "p2p_visitor"

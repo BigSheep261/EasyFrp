@@ -79,3 +79,36 @@
 - `@dataclass(slots=True)` 用来让类更适合表达“数据结构”：自动生成初始化方法，并限制实例只能拥有声明过的字段。
 - `validate(self) -> None` 是模型自己的数据校验方法，负责判断当前对象字段是否合法；成功时不返回内容，失败时抛出异常。
 - `@classmethod` 让方法接收类本身 `cls`，适合写 `from_dict` 这种“从字典创建模型对象”的工厂方法。
+
+### P2P 配置扩展待确认
+
+- 用户希望按标准级继续新增 P2P 模式对应数据。
+- 已确认这里的 P2P 指 frp 的 `xtcp` 类型。
+- P2P 配置需要区分被访问端配置和访问端配置，不能简单等同于 TCP/UDP 的单端口映射模型。
+- 计划新增 `p2p_proxy_config.py` 和 `p2p_visitors_config.py` 两个模型文件。
+- 被访问端可包含 `allowUsers` 等 `[[proxies]]` 特有字段。
+- 访问端可包含 `keepTunnelOpen`、`maxRetriesAnHour`、`minRetryInterval` 等 `[[visitors]]` 特有字段。
+- 需要注意：frp TOML 的 `type` 应保持 `xtcp`，不能改成 `p2p_host` 或 `p2p_visitor`；角色信息应作为 JSON 模型自己的字段单独保存。
+
+### P2P 配置已实现结构
+
+- `src/frp_gui/models/frpc/profile_role.py`
+  - 新增 `FrpcProfileRole`，目前包含 `p2p_host` 和 `p2p_visitor`。
+- `src/frp_gui/models/frpc/p2p_proxy_config.py`
+  - 新增 `P2PProxyConfig`，表示 xtcp 被访问端配置。
+  - 关键字段：`name`、`type=xtcp`、`role=p2p_host`、`localIP`、`localPort`、`secretKey`、`allowUsers`。
+- `src/frp_gui/models/frpc/p2p_visitors_config.py`
+  - 新增 `P2PVisitorsConfig`，表示 xtcp 访问端配置。
+  - 关键字段：`name`、`type=xtcp`、`role=p2p_visitor`、`serverName`、`secretKey`、`bindAddr`、`bindPort`、`keepTunnelOpen`、`maxRetriesAnHour`、`minRetryInterval`。
+- `FrpcProfileService.load_proxy_config`
+  - 读取 `type=tcp` 时解析为 `TcpProxyConfig`。
+  - 读取 `type=udp` 时解析为 `UdpProxyConfig`。
+  - 读取 `type=xtcp` 时继续读取 `role`。
+  - `role=p2p_host` 解析为 `P2PProxyConfig`。
+  - `role=p2p_visitor` 解析为 `P2PVisitorsConfig`。
+
+### P2P 设计校准
+
+- `type` 属于 frp 原生配置字段，必须保存为 `xtcp`。
+- `role` 属于 EasyFrp 自己的配置档案字段，用来区分同一个 `xtcp` 类型下的不同模型。
+- 未来生成 TOML 时，`P2PProxyConfig` 应进入 `[[proxies]]`，`P2PVisitorsConfig` 应进入 `[[visitors]]`。

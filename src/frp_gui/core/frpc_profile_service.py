@@ -8,13 +8,16 @@ from typing import Any
 from frp_gui.core.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
 from frp_gui.models.frpc import (
     FrpcGlobalConfig,
+    FrpcProfileRole,
     FrpcProxyType,
+    P2PProxyConfig,
+    P2PVisitorsConfig,
     TcpProxyConfig,
     UdpProxyConfig,
 )
 
 
-FrpcProxyConfig = TcpProxyConfig | UdpProxyConfig
+FrpcProxyConfig = TcpProxyConfig | UdpProxyConfig | P2PProxyConfig | P2PVisitorsConfig
 
 
 class FrpcProfileService:
@@ -55,14 +58,14 @@ class FrpcProfileService:
         profile_name: str,
         config: FrpcProxyConfig,
     ) -> Path:
-        """保存一个 TCP 或 UDP 连接配置 JSON 文件。"""
+        """保存一个连接配置 JSON 文件。"""
         config.validate()
         path = self._profile_path(self.connection_dir, profile_name)
         self._write_json(path, config.to_dict())
         return path
 
     def load_proxy_config(self, profile_name: str) -> FrpcProxyConfig:
-        """读取一个连接配置，并按保存的代理类型解析成对应模型。"""
+        """读取一个连接配置，并按 type 和 role 解析成对应模型。"""
         path = self._profile_path(self.connection_dir, profile_name)
         data = self._read_json(path)
 
@@ -71,8 +74,19 @@ class FrpcProfileService:
             return TcpProxyConfig.from_dict(data)
         if proxy_type == FrpcProxyType.UDP.value:
             return UdpProxyConfig.from_dict(data)
+        if proxy_type == FrpcProxyType.XTCP.value:
+            return self._load_xtcp_config(data)
 
         raise ValueError(f"不支持的 frpc 代理类型：{proxy_type!r}")
+
+    def _load_xtcp_config(self, data: dict[str, Any]) -> P2PProxyConfig | P2PVisitorsConfig:
+        role = data.get("role")
+        if role == FrpcProfileRole.P2P_HOST.value:
+            return P2PProxyConfig.from_dict(data)
+        if role == FrpcProfileRole.P2P_VISITOR.value:
+            return P2PVisitorsConfig.from_dict(data)
+
+        raise ValueError(f"不支持的 xtcp 配置角色：{role!r}")
 
     def list_global_profiles(self) -> list[str]:
         """返回已保存的全局配置名称，不包含 .json 后缀。"""
