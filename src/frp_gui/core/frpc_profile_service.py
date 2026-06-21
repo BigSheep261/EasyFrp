@@ -1,0 +1,115 @@
+"""结构化 frpc 配置档案的 JSON 持久化服务。"""
+
+from pathlib import Path
+import json
+import re
+from typing import Any
+
+from frp_gui.core.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
+from frp_gui.models.frpc import (
+    FrpcGlobalConfig,
+    FrpcProxyType,
+    TcpProxyConfig,
+    UdpProxyConfig,
+)
+
+
+FrpcProxyConfig = TcpProxyConfig | UdpProxyConfig
+
+
+class FrpcProfileService:
+    """保存和读取结构化 frpc JSON 配置档案。
+
+    全局配置和连接配置分开保存，方便未来启动时把一个全局配置和被选中的连接配置组合起来。
+    """
+
+    _VALID_PROFILE_NAME = re.compile(r"^[^<>:\"/\\|?*\x00-\x1f]+$")
+
+    def __init__(
+        self,
+        global_dir: Path | None = None,
+        connection_dir: Path | None = None,
+    ) -> None:
+        self.global_dir = global_dir or FRPC_GLOBAL_PROFILE_DIR
+        self.connection_dir = connection_dir or FRPC_CONNECTION_PROFILE_DIR
+
+    def save_global_config(
+        self,
+        profile_name: str,
+        config: FrpcGlobalConfig,
+    ) -> Path:
+        """保存一个 frpc 全局配置 JSON 文件。"""
+        config.validate()
+        path = self._profile_path(self.global_dir, profile_name)
+        self._write_json(path, config.to_dict())
+        return path
+
+    def load_global_config(self, profile_name: str) -> FrpcGlobalConfig:
+        """读取一个 frpc 全局配置 JSON 文件。"""
+        path = self._profile_path(self.global_dir, profile_name)
+        data = self._read_json(path)
+        return FrpcGlobalConfig.from_dict(data)
+
+    def save_proxy_config(
+        self,
+        profile_name: str,
+        config: FrpcProxyConfig,
+    ) -> Path:
+        """保存一个 TCP 或 UDP 连接配置 JSON 文件。"""
+        config.validate()
+        path = self._profile_path(self.connection_dir, profile_name)
+        self._write_json(path, config.to_dict())
+        return path
+
+    def load_proxy_config(self, profile_name: str) -> FrpcProxyConfig:
+        """读取一个连接配置，并按保存的代理类型解析成对应模型。"""
+        path = self._profile_path(self.connection_dir, profile_name)
+        data = self._read_json(path)
+
+        proxy_type = data.get("type")
+        if proxy_type == FrpcProxyType.TCP.value:
+            return TcpProxyConfig.from_dict(data)
+        if proxy_type == FrpcProxyType.UDP.value:
+            return UdpProxyConfig.from_dict(data)
+
+        raise ValueError(f"不支持的 frpc 代理类型：{proxy_type!r}")
+
+    def list_global_profiles(self) -> list[str]:
+        """返回已保存的全局配置名称，不包含 .json 后缀。"""
+        return self._list_profiles(self.global_dir)
+
+    def list_proxy_profiles(self) -> list[str]:
+        """返回已保存的连接配置名称，不包含 .json 后缀。"""
+        return self._list_profiles(self.connection_dir)
+
+    def _profile_path(self, directory: Path, profile_name: str) -> Path:
+        safe_name = self._validate_profile_name(profile_name)
+        return directory / f"{safe_name}.json"
+
+    def _validate_profile_name(self, profile_name: str) -> str:
+        name = profile_name.strip()
+        if not name:
+            raise ValueError("配置名称不能为空。")
+        if name in {".", ".."} or not self._VALID_PROFILE_NAME.match(name):
+            raise ValueError("配置名称包含无效的文件名字符。")
+        return name
+
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        text = json.dumps(data, ensure_ascii=False, indent=2)
+        path.write_text(f"{text}\n", encoding="utf-8")
+
+    def _read_json(self, path: Path) -> dict[str, Any]:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise ValueError(f"JSON 配置档案格式无效：{path}") from error
+
+        if not isinstance(data, dict):
+            raise ValueError("JSON 配置档案根节点必须是对象。")
+        return data
+
+    def _list_profiles(self, directory: Path) -> list[str]:
+        if not directory.exists():
+            return []
+        return sorted(path.stem for path in directory.glob("*.json") if path.is_file())

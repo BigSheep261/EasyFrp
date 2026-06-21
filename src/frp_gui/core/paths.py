@@ -5,6 +5,11 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CONFIG_DIR = PROJECT_ROOT / "config"
+DATA_DIR = PROJECT_ROOT / "data"
+PROFILE_DIR = DATA_DIR / "profile"
+FRPC_PROFILE_DIR = PROFILE_DIR / "frpc"
+FRPC_GLOBAL_PROFILE_DIR = FRPC_PROFILE_DIR / "global"
+FRPC_CONNECTION_PROFILE_DIR = FRPC_PROFILE_DIR / "connections"
 LOG_DIR = PROJECT_ROOT / "logs"
 RESOURCE_DIR = PROJECT_ROOT / "resources"
 ICON_DIR = RESOURCE_DIR / "icons"

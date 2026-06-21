@@ -8,7 +8,7 @@ main_window 是整个 UI 的外壳。
 """
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCloseEvent, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -16,14 +16,24 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMenu,
     QStackedWidget,
+    QSystemTrayIcon,
     QVBoxLayout,
     QWidget,
 )
 
-from frp_gui.core.paths import APP_ICON_PATH, HEADER_LOGO_PATH, STATUS_ICON_PATH
+from frp_gui.core.paths import (
+    APP_ICON_PATH,
+    HEADER_LOGO_PATH,
+    STATUS_ICON_PATH,
+    TRAY_ICON_PATH,
+)
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
+
+
+WINDOW_OPACITY = 1
 
 
 class MainWindow(QMainWindow):
@@ -35,6 +45,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("EasyFrp")
         if APP_ICON_PATH.exists():
             self.setWindowIcon(QIcon(str(APP_ICON_PATH)))
+        # 设置整个主窗口透明度。Qt 使用 0.0 到 1.0 表示窗口不透明度：
+        # 1.0 表示完全不透明，0.75 表示约 75% 不透明，也就是能看到一些背景。
+        self.setWindowOpacity(WINDOW_OPACITY)
         self.resize(960, 640)
 
         self.sidebar_container = QWidget(self)
@@ -49,15 +62,19 @@ class MainWindow(QMainWindow):
 
         self.frpc_control_view = FrpcControlView(self)
         self.frpc_config_view = FrpcConfigView(self)
+        self.tray_icon: QSystemTrayIcon | None = None
 
         self._build_ui()
         self._build_status_bar()
+        self._build_tray_icon()
         self._connect_signals()
         self.sidebar.setCurrentRow(0)
         self.statusBar().showMessage("就绪")
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """确保关闭 GUI 时，页面内正在运行的进程也能退出。"""
+        if self.tray_icon is not None:
+            self.tray_icon.hide()
         self.frpc_control_view.shutdown()
         super().closeEvent(event)
 
@@ -153,6 +170,40 @@ class MainWindow(QMainWindow):
             )
         self.statusBar().addPermanentWidget(self.status_icon)
 
+    def _build_tray_icon(self) -> None:
+        """创建 Windows 右下角系统托盘图标。
+
+        QSystemTrayIcon 必须被对象属性持有，不能只放在局部变量里。
+        如果局部变量在函数结束后被回收，托盘图标也会随之消失。
+        """
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            self.statusBar().showMessage("当前系统不支持托盘图标")
+            return
+
+        tray_icon_path = TRAY_ICON_PATH if TRAY_ICON_PATH.exists() else APP_ICON_PATH
+        if not tray_icon_path.exists():
+            self.statusBar().showMessage("未找到托盘图标资源")
+            return
+
+        self.tray_icon = QSystemTrayIcon(QIcon(str(tray_icon_path)), self)
+        self.tray_icon.setToolTip("EasyFrp")
+
+        tray_menu = QMenu(self)
+
+        show_action = QAction("显示主窗口", self)
+        show_action.triggered.connect(self._show_from_tray)
+
+        quit_action = QAction("退出", self)
+        quit_action.triggered.connect(lambda: self.close())
+
+        tray_menu.addAction(show_action)
+        tray_menu.addSeparator()
+        tray_menu.addAction(quit_action)
+
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.activated.connect(self._handle_tray_icon_activated)
+        self.tray_icon.show()
+
     def _connect_signals(self) -> None:
         """连接主窗口级别的信号。"""
         self.sidebar.currentRowChanged.connect(self.page_stack.setCurrentIndex)
@@ -162,3 +213,21 @@ class MainWindow(QMainWindow):
         self.frpc_config_view.status_message_changed.connect(
             self.statusBar().showMessage
         )
+
+    def _handle_tray_icon_activated(
+        self,
+        reason: QSystemTrayIcon.ActivationReason,
+    ) -> None:
+        """响应用户点击托盘图标。
+
+        Windows 上常见交互是双击托盘图标恢复主窗口。
+        右键菜单由 Qt 自动处理，不需要在这里额外判断。
+        """
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self._show_from_tray()
+
+    def _show_from_tray(self) -> None:
+        """从托盘菜单或双击托盘图标恢复主窗口。"""
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
