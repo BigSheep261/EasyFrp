@@ -11,12 +11,7 @@ class LocalFileUtils:
     DEFAULT_ENCODING = "utf-8"
 
     @staticmethod
-    def read_text(
-        path: Path,
-        *,
-        encoding: str = DEFAULT_ENCODING,
-        default: str | None = None,
-    ) -> str:
+    def read_text(path: Path,*,encoding: str = DEFAULT_ENCODING,default: str | None = None) -> str:
         if not path.exists():
             if default is not None:
                 return default
@@ -24,33 +19,16 @@ class LocalFileUtils:
         return path.read_text(encoding=encoding)
 
     @staticmethod
-    def write_text(
-        path: Path,
-        text: str,
-        *,
-        encoding: str = DEFAULT_ENCODING,
-    ) -> None:
+    def write_text(path: Path,text: str,*,encoding: str = DEFAULT_ENCODING) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding=encoding)
 
     @staticmethod
-    def read_json(
-        path: Path,
-        *,
-        encoding: str = DEFAULT_ENCODING,
-    ) -> Any:
+    def read_json(path: Path,*,encoding: str = DEFAULT_ENCODING) -> Any:
         return json.loads(LocalFileUtils.read_text(path, encoding=encoding))
 
     @staticmethod
-    def write_json(
-        path: Path,
-        data: Any,
-        *,
-        encoding: str = DEFAULT_ENCODING,
-        ensure_ascii: bool = False,
-        indent: int | None = 2,
-        trailing_newline: bool = True,
-    ) -> None:
+    def write_json(path: Path,data: Any,*,encoding: str = DEFAULT_ENCODING,ensure_ascii: bool = False,indent: int | None = 2,trailing_newline: bool = True,) -> None:
         text = json.dumps(data, ensure_ascii=ensure_ascii, indent=indent)
         if trailing_newline:
             text = f"{text}\n"
