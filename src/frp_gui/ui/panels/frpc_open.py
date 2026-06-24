@@ -27,7 +27,7 @@ class FrpcOpenPanel(QWidget):
     """
 
     # panel 内部的状态变化可以通知外层页面或主窗口。
-    # main_window 会用这个信号更新底部 statusBar。
+    # main_window 会用这个信号更新主界面内的运行提示。
     status_message_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:

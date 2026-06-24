@@ -10,6 +10,7 @@ import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
 from frp_gui.core.paths import CONFIG_DIR
+from frp_gui.utils import LocalFileUtils
 
 
 class FrpcConfigService:
@@ -28,9 +29,7 @@ class FrpcConfigService:
         Windows 的系统默认编码不一定是 UTF-8，所以这里显式指定编码，
         避免中文注释或后续中文配置内容被错误读取。
         """
-        if not self.config_path.exists():
-            return ""
-        return self.config_path.read_text(encoding="utf-8")
+        return LocalFileUtils.read_text(self.config_path, default="")
 
     def validate_text(self, text: str) -> tuple[bool, str]:
         """只校验 TOML 语法，不写入磁盘。
@@ -50,6 +49,5 @@ class FrpcConfigService:
         if not is_valid:
             return False, error_message
 
-        self.config_path.parent.mkdir(parents=True, exist_ok=True)
-        self.config_path.write_text(text, encoding="utf-8")
+        LocalFileUtils.write_text(self.config_path, text)
         return True, ""

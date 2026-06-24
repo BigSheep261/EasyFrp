@@ -121,13 +121,13 @@ class FrpcTomlEditorPanel(QWidget):
         QMessageBox.information(self, "保存成功", "frpc.toml 已保存。")
 
     def _show_info(self, message: str) -> None:
-        """在面板和主窗口状态栏里显示普通提示。"""
+        """在面板和主窗口运行提示里显示普通提示。"""
         self.message_label.setStyleSheet("color: #80cbc4;")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)
 
     def _show_error(self, message: str) -> None:
-        """在面板和主窗口状态栏里显示错误提示。"""
+        """在面板和主窗口运行提示里显示错误提示。"""
         self.message_label.setStyleSheet("color: #ef9a9a;")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)

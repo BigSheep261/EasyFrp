@@ -88,7 +88,7 @@ class FrpsConfigView(QWidget):
         )
 
     def _show_info(self, message: str) -> None:
-        """在页面和主窗口状态栏里显示普通提示。"""
+        """在页面和主窗口运行提示里显示普通提示。"""
         self.message_label.setStyleSheet("color: #80cbc4;")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)
