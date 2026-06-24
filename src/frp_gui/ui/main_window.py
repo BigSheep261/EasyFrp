@@ -29,9 +29,11 @@ from frp_gui.core.paths import (
     STATUS_ICON_PATH,
     TRAY_ICON_PATH,
 )
+from frp_gui.ui.pages.easyfrp_config_view import EasyfrpConfigView
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
-
+from frp_gui.ui.pages.frps_config_view import FrpsConfigView
+from frp_gui.ui.pages.frps_control_view import FrpsControlView
 
 WINDOW_OPACITY = 1
 
@@ -62,6 +64,9 @@ class MainWindow(QMainWindow):
 
         self.frpc_control_view = FrpcControlView(self)
         self.frpc_config_view = FrpcConfigView(self)
+        self.frps_control_view = FrpsControlView(self)
+        self.frps_config_view = FrpsConfigView(self)
+        self.easyfrp_config_view = EasyfrpConfigView(self)
         self.tray_icon: QSystemTrayIcon | None = None
 
         self._build_ui()
@@ -144,6 +149,10 @@ class MainWindow(QMainWindow):
 
         self.sidebar.addItem(QListWidgetItem("frpc 控制"))
         self.sidebar.addItem(QListWidgetItem("frpc 配置"))
+        self.sidebar.addItem(QListWidgetItem("frps 控制"))
+        self.sidebar.addItem(QListWidgetItem("frps 配置"))
+        self.sidebar.addItem(QListWidgetItem("设置"))
+
         sidebar_layout.addWidget(self.logo_label)
         sidebar_layout.addWidget(self.sidebar, stretch=1)
 
@@ -151,6 +160,9 @@ class MainWindow(QMainWindow):
         """把页面加入右侧页面容器。"""
         self.page_stack.addWidget(self.frpc_control_view)
         self.page_stack.addWidget(self.frpc_config_view)
+        self.page_stack.addWidget(self.frps_control_view)
+        self.page_stack.addWidget(self.frps_config_view)
+        self.page_stack.addWidget(self.easyfrp_config_view)
 
     def _build_status_bar(self) -> None:
         """Add the small FRP status icon used by the bottom status bar."""
@@ -211,6 +223,15 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage
         )
         self.frpc_config_view.status_message_changed.connect(
+            self.statusBar().showMessage
+        )
+        self.frps_control_view.status_message_changed.connect(
+            self.statusBar().showMessage
+        )
+        self.frps_config_view.status_message_changed.connect(
+            self.statusBar().showMessage
+        )
+        self.easyfrp_config_view.status_message_changed.connect(
             self.statusBar().showMessage
         )
 
