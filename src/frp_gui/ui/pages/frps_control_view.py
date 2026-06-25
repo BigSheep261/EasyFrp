@@ -22,6 +22,7 @@ class FrpsControlView(QWidget):
         super().__init__(parent)
 
         self.title_label = QLabel("FRP 服务端控制", self)
+        self.title_label.setObjectName("pageTitle")
         title_font = self.title_label.font()
         title_font.setPointSize(18)
         title_font.setBold(True)
@@ -31,9 +32,11 @@ class FrpsControlView(QWidget):
             "用于启动和停止 frps 服务端，默认面向 runtime/frps.exe 和 config/frps.toml。",
             self,
         )
+        self.description_label.setObjectName("pageDescription")
         self.description_label.setWordWrap(True)
 
         self.status_label = QLabel("状态：待接入启动逻辑", self)
+        self.status_label.setObjectName("statusBadge")
         self.open_switch = SwitchButton(
             off_text="启动 frps",
             on_text="停止 frps",
@@ -41,6 +44,7 @@ class FrpsControlView(QWidget):
         )
 
         self.log_view = QTextEdit(self)
+        self.log_view.setObjectName("logView")
         self.log_view.setReadOnly(True)
         self.log_view.setPlaceholderText("frps 的标准输出和错误输出会显示在这里。")
 
@@ -54,6 +58,7 @@ class FrpsControlView(QWidget):
         layout.setSpacing(18)
 
         control_frame = QFrame(self)
+        control_frame.setObjectName("controlSurface")
         control_frame.setFrameShape(QFrame.Shape.StyledPanel)
 
         control_layout = QHBoxLayout(control_frame)

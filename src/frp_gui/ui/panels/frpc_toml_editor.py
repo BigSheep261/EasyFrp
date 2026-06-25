@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.core.frpc_config_service import FrpcConfigService
+from frp_gui.ui.theme import set_widget_state
 
 
 class FrpcTomlEditorPanel(QWidget):
@@ -32,18 +33,24 @@ class FrpcTomlEditorPanel(QWidget):
         self.config_service = FrpcConfigService()
 
         self.path_label = QLabel(str(self.config_service.config_path), self)
+        self.path_label.setObjectName("pathLabel")
         self.path_label.setWordWrap(True)
 
         self.editor = QPlainTextEdit(self)
+        self.editor.setObjectName("configEditor")
         self.editor.setPlaceholderText("frpc.toml 内容会显示在这里。")
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
         self.message_label = QLabel("", self)
+        self.message_label.setObjectName("inlineMessage")
         self.message_label.setWordWrap(True)
 
         self.reload_button = QPushButton("重新加载", self)
         self.validate_button = QPushButton("校验 TOML", self)
         self.save_button = QPushButton("保存修改", self)
+        self.reload_button.setObjectName("secondaryButton")
+        self.validate_button.setObjectName("secondaryButton")
+        self.save_button.setObjectName("primaryButton")
 
         self._build_ui()
         self._connect_signals()
@@ -56,6 +63,7 @@ class FrpcTomlEditorPanel(QWidget):
         main_layout.setSpacing(14)
 
         toolbar_frame = QFrame(self)
+        toolbar_frame.setObjectName("toolbarSurface")
         toolbar_frame.setFrameShape(QFrame.Shape.StyledPanel)
 
         toolbar_layout = QHBoxLayout(toolbar_frame)
@@ -122,12 +130,12 @@ class FrpcTomlEditorPanel(QWidget):
 
     def _show_info(self, message: str) -> None:
         """在面板和主窗口运行提示里显示普通提示。"""
-        self.message_label.setStyleSheet("color: #80cbc4;")
+        set_widget_state(self.message_label, "info")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)
 
     def _show_error(self, message: str) -> None:
         """在面板和主窗口运行提示里显示错误提示。"""
-        self.message_label.setStyleSheet("color: #ef9a9a;")
+        set_widget_state(self.message_label, "error")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)

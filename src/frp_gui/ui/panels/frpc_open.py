@@ -42,6 +42,7 @@ class FrpcOpenPanel(QWidget):
         self._syncing_switch = False
 
         self.status_label = QLabel("状态：未运行", self)
+        self.status_label.setObjectName("statusBadge")
         self.open_switch = SwitchButton(
             off_text="启动 frpc",
             on_text="停止 frpc",
@@ -49,6 +50,7 @@ class FrpcOpenPanel(QWidget):
         )
 
         self.log_view = QTextEdit(self)
+        self.log_view.setObjectName("logView")
         self.log_view.setReadOnly(True)
         self.log_view.setPlaceholderText("frpc 的标准输出和错误输出会显示在这里。")
 
@@ -66,6 +68,7 @@ class FrpcOpenPanel(QWidget):
         main_layout.setSpacing(18)
 
         control_frame = QFrame(self)
+        control_frame.setObjectName("controlSurface")
         control_frame.setFrameShape(QFrame.Shape.StyledPanel)
 
         control_layout = QHBoxLayout(control_frame)

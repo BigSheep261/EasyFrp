@@ -11,6 +11,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from frp_gui.ui.theme import set_widget_state
+
 
 class FrpsConfigView(QWidget):
     """侧边栏中的 frps 配置管理页面。"""
@@ -21,6 +23,7 @@ class FrpsConfigView(QWidget):
         super().__init__(parent)
 
         self.title_label = QLabel("frps 配置管理", self)
+        self.title_label.setObjectName("pageTitle")
         title_font = self.title_label.font()
         title_font.setPointSize(18)
         title_font.setBold(True)
@@ -30,23 +33,30 @@ class FrpsConfigView(QWidget):
             "用于查看、编辑和保存 config/frps.toml 服务端配置。",
             self,
         )
+        self.description_label.setObjectName("pageDescription")
         self.description_label.setWordWrap(True)
 
         self.path_label = QLabel("config/frps.toml", self)
+        self.path_label.setObjectName("pathLabel")
         self.path_label.setWordWrap(True)
 
         self.editor = QPlainTextEdit(self)
+        self.editor.setObjectName("configEditor")
         self.editor.setPlaceholderText(
             "frps.toml 内容会显示在这里，文件读写逻辑待接入。"
         )
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
         self.message_label = QLabel("", self)
+        self.message_label.setObjectName("inlineMessage")
         self.message_label.setWordWrap(True)
 
         self.reload_button = QPushButton("重新加载", self)
         self.validate_button = QPushButton("校验 TOML", self)
         self.save_button = QPushButton("保存修改", self)
+        self.reload_button.setObjectName("secondaryButton")
+        self.validate_button.setObjectName("secondaryButton")
+        self.save_button.setObjectName("primaryButton")
 
         self._build_ui()
         self._connect_signals()
@@ -58,6 +68,7 @@ class FrpsConfigView(QWidget):
         layout.setSpacing(18)
 
         toolbar_frame = QFrame(self)
+        toolbar_frame.setObjectName("toolbarSurface")
         toolbar_frame.setFrameShape(QFrame.Shape.StyledPanel)
 
         toolbar_layout = QHBoxLayout(toolbar_frame)
@@ -89,6 +100,6 @@ class FrpsConfigView(QWidget):
 
     def _show_info(self, message: str) -> None:
         """在页面和主窗口运行提示里显示普通提示。"""
-        self.message_label.setStyleSheet("color: #80cbc4;")
+        set_widget_state(self.message_label, "info")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)

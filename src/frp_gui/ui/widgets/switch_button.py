@@ -43,36 +43,12 @@ class SwitchButton(QCheckBox):
         # 鼠标悬停时显示手型，暗示这是一个可以点击的控件。
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumWidth(144)
+        self.setObjectName("switchButton")
 
         # QCheckBox 自带 toggled(bool) 信号。
         # 每次 checked 状态变化时，更新按钮旁边的文案。
         self.toggled.connect(self._update_text)
         self._update_text(self.isChecked())
-
-        # 这里暂时使用组件内样式，后续如果 UI 变复杂，可以迁移到统一 qss 文件。
-        self.setStyleSheet(
-            """
-            QCheckBox {
-                spacing: 10px;
-                font-size: 14px;
-            }
-            QCheckBox::indicator {
-                width: 46px;
-                height: 24px;
-                border-radius: 12px;
-                background-color: #546e7a;
-            }
-            QCheckBox::indicator:checked {
-                background-color: #26a69a;
-            }
-            QCheckBox::indicator:unchecked {
-                background-color: #546e7a;
-            }
-            QCheckBox::indicator:disabled {
-                background-color: #455a64;
-            }
-            """
-        )
 
     def _update_text(self, checked: bool) -> None:
         """根据开关状态更新显示文案。"""

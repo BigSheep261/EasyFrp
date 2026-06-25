@@ -22,6 +22,7 @@ class FrpcControlView(QWidget):
         super().__init__(parent)
 
         self.title_label = QLabel("FRP 客户端控制", self)
+        self.title_label.setObjectName("pageTitle")
         title_font = self.title_label.font()
         title_font.setPointSize(18)
         title_font.setBold(True)
@@ -31,6 +32,7 @@ class FrpcControlView(QWidget):
             "默认使用 runtime/frpc.exe 和 config/frpc.toml 启动客户端。",
             self,
         )
+        self.description_label.setObjectName("pageDescription")
         self.description_label.setWordWrap(True)
 
         self.frpc_open_panel = FrpcOpenPanel(self)

@@ -15,6 +15,7 @@ class FrpcConfigView(QWidget):
         super().__init__(parent)
 
         self.title_label = QLabel("frpc 配置编辑", self)
+        self.title_label.setObjectName("pageTitle")
         title_font = self.title_label.font()
         title_font.setPointSize(18)
         title_font.setBold(True)
@@ -24,6 +25,7 @@ class FrpcConfigView(QWidget):
             "读取 config/frpc.toml，编辑后点击保存会写回原文件。",
             self,
         )
+        self.description_label.setObjectName("pageDescription")
         self.description_label.setWordWrap(True)
 
         self.editor_panel = FrpcTomlEditorPanel(self)

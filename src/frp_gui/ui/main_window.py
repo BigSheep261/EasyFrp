@@ -11,6 +11,7 @@ from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -35,6 +36,7 @@ from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
 from frp_gui.ui.pages.frps_config_view import FrpsConfigView
 from frp_gui.ui.pages.frps_control_view import FrpsControlView
+from frp_gui.ui.theme import apply_app_theme
 
 WINDOW_OPACITY = 1
 
@@ -64,13 +66,20 @@ class MainWindow(QMainWindow):
         self.main_message_frame = QFrame(self)
         self.main_message_label = QLabel("就绪", self)
         self._drag_position: QPoint | None = None
+        self.logo_label.setObjectName("logoLabel")
+        self.sidebar_container.setObjectName("sidebarContainer")
+        self.content_container.setObjectName("contentContainer")
+        self.page_stack = QStackedWidget(self)
+        self.page_stack.setObjectName("pageStack")
+        self.minimize_button.setObjectName("windowButton")
+        self.maximize_button.setObjectName("windowButton")
+        self.close_button.setObjectName("closeButton")
 
         # 左侧侧边栏：负责展示可切换的页面入口。
         self.sidebar = QListWidget(self)
 
         # 右侧页面容器：QStackedWidget 类似前端里的 router-view。
         # 它可以同时持有多个页面，但一次只显示其中一个。
-        self.page_stack = QStackedWidget(self)
 
         self.frpc_control_view = FrpcControlView(self)
         self.frpc_config_view = FrpcConfigView(self)
@@ -165,36 +174,12 @@ class MainWindow(QMainWindow):
         """把原生标题栏按钮放到主界面右上角。"""
         self.window_controls_container.setObjectName("windowControlsContainer")
         self.window_controls_container.setFixedHeight(36)
-        self.window_controls_container.setStyleSheet(
-            """
-            QWidget#windowControlsContainer {
-                background: transparent;
-            }
-            QPushButton {
-                min-width: 34px;
-                min-height: 28px;
-                border: none;
-                border-radius: 4px;
-                color: #cfd8dc;
-                background: transparent;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.10);
-            }
-            QPushButton#closeButton:hover {
-                background-color: #d32f2f;
-                color: white;
-            }
-            """
-        )
 
         controls_layout = QHBoxLayout(self.window_controls_container)
         controls_layout.setContentsMargins(0, 4, 8, 4)
         controls_layout.setSpacing(2)
         controls_layout.addStretch()
 
-        self.close_button.setObjectName("closeButton")
         self.minimize_button.setToolTip("最小化")
         self.maximize_button.setToolTip("最大化")
         self.close_button.setToolTip("关闭")
@@ -238,24 +223,6 @@ class MainWindow(QMainWindow):
         self.sidebar.setObjectName("sidebarNavigation")
         self.sidebar.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.sidebar.setSpacing(4)
-        self.sidebar.setStyleSheet(
-            """
-            QListWidget#sidebarNavigation {
-                background: transparent;
-                border: none;
-                padding: 6px 0 0 0;
-            }
-            QListWidget#sidebarNavigation::item {
-                min-height: 40px;
-                padding: 8px 12px;
-                border-radius: 6px;
-            }
-            QListWidget#sidebarNavigation::item:selected {
-                background-color: #26a69a;
-                color: white;
-            }
-            """
-        )
 
         self.sidebar.addItem(QListWidgetItem("frpc 控制"))
         self.sidebar.addItem(QListWidgetItem("frpc 配置"))
@@ -281,26 +248,14 @@ class MainWindow(QMainWindow):
         """创建主界面内的信息提示块，替代窗口底部状态栏。"""
         self.main_message_frame.setFrameShape(QFrame.Shape.StyledPanel)
         self.main_message_frame.setObjectName("mainMessageFrame")
-        self.main_message_frame.setStyleSheet(
-            """
-            QFrame#mainMessageFrame {
-                border: 1px solid #455a64;
-                border-radius: 6px;
-                background-color: rgba(38, 166, 154, 0.08);
-            }
-            QLabel {
-                color: #b0bec5;
-                font-size: 12px;
-            }
-            """
-        )
+        self.main_message_label.setObjectName("mainMessageText")
 
         message_layout = QVBoxLayout(self.main_message_frame)
         message_layout.setContentsMargins(10, 8, 10, 8)
         message_layout.setSpacing(4)
 
         message_title = QLabel("运行提示", self.main_message_frame)
-        message_title.setStyleSheet("color: #80cbc4; font-weight: 600;")
+        message_title.setObjectName("mainMessageTitle")
         self.main_message_label.setWordWrap(True)
 
         message_layout.addWidget(message_title)
@@ -358,10 +313,20 @@ class MainWindow(QMainWindow):
         self.easyfrp_config_view.status_message_changed.connect(
             self._show_main_message
         )
+        self.easyfrp_config_view.theme_changed.connect(self._handle_theme_changed)
 
     def _show_main_message(self, message: str) -> None:
         """把全局提示展示在主界面信息块里。"""
         self.main_message_label.setText(message)
+
+    def _handle_theme_changed(self, theme_key: str) -> None:
+        """Apply a selected UI variant from the settings page."""
+        application = QApplication.instance()
+        if application is None:
+            return
+
+        variant = apply_app_theme(application, theme_key, persist=True)
+        self._show_main_message(f"界面风格已切换为：{variant.name}")
 
     def _toggle_maximized(self) -> None:
         """切换窗口最大化和普通大小。"""
