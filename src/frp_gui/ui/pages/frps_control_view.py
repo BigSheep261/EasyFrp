@@ -1,16 +1,9 @@
 """frps 控制页面。"""
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
-from frp_gui.ui.widgets.switch_button import SwitchButton
+from frp_gui.ui.panels.frps_open import FrpsOpenPanel
 
 
 class FrpsControlView(QWidget):
@@ -29,27 +22,22 @@ class FrpsControlView(QWidget):
         self.title_label.setFont(title_font)
 
         self.description_label = QLabel(
-            "用于启动和停止 frps 服务端，默认面向 runtime/frps.exe 和 config/frps.toml。",
+            "默认使用 runtime/frps.exe 和 config/frps.toml 启动服务端。",
             self,
         )
         self.description_label.setObjectName("pageDescription")
         self.description_label.setWordWrap(True)
 
-        self.status_label = QLabel("状态：待接入启动逻辑", self)
-        self.status_label.setObjectName("statusBadge")
-        self.open_switch = SwitchButton(
-            off_text="启动 frps",
-            on_text="停止 frps",
-            parent=self,
+        self.frps_open_panel = FrpsOpenPanel(self)
+        self.frps_open_panel.status_message_changed.connect(
+            self.status_message_changed.emit
         )
 
-        self.log_view = QTextEdit(self)
-        self.log_view.setObjectName("logView")
-        self.log_view.setReadOnly(True)
-        self.log_view.setPlaceholderText("frps 的标准输出和错误输出会显示在这里。")
-
         self._build_ui()
-        self._connect_signals()
+
+    def shutdown(self) -> None:
+        """让页面内的功能模块释放运行中的资源。"""
+        self.frps_open_panel.shutdown()
 
     def _build_ui(self) -> None:
         """创建页面级布局。"""
@@ -57,34 +45,6 @@ class FrpsControlView(QWidget):
         layout.setContentsMargins(28, 28, 28, 28)
         layout.setSpacing(18)
 
-        control_frame = QFrame(self)
-        control_frame.setObjectName("controlSurface")
-        control_frame.setFrameShape(QFrame.Shape.StyledPanel)
-
-        control_layout = QHBoxLayout(control_frame)
-        control_layout.setContentsMargins(18, 16, 18, 16)
-        control_layout.setSpacing(12)
-        control_layout.addWidget(self.status_label)
-        control_layout.addStretch()
-        control_layout.addWidget(self.open_switch)
-
         layout.addWidget(self.title_label)
         layout.addWidget(self.description_label)
-        layout.addWidget(control_frame)
-        layout.addWidget(self.log_view, stretch=1)
-
-    def _connect_signals(self) -> None:
-        """连接页面内的基础交互。"""
-        self.open_switch.toggled.connect(self._handle_switch_toggled)
-
-    def _handle_switch_toggled(self, checked: bool) -> None:
-        """只更新界面提示，不启动或停止真实 frps 进程。"""
-        if checked:
-            message = "已点击启动 frps，业务逻辑待接入"
-            self.status_label.setText("状态：启动操作待接入")
-        else:
-            message = "已点击停止 frps，业务逻辑待接入"
-            self.status_label.setText("状态：停止操作待接入")
-
-        self.log_view.append(f"[UI] {message}")
-        self.status_message_changed.emit(message)
+        layout.addWidget(self.frps_open_panel, stretch=1)

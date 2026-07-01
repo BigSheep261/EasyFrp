@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
         if self.tray_icon is not None:
             self.tray_icon.hide()
         self.frpc_control_view.shutdown()
+        self.frps_control_view.shutdown()
         super().closeEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
