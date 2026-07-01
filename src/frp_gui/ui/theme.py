@@ -258,6 +258,17 @@ def _build_qss(tokens: Mapping[str, str]) -> str:
         font-size: 13px;
     }}
 
+    QLabel#frpcManagerTitle {{
+        color: {tokens["text"]};
+        font-size: 30px;
+        font-weight: 800;
+    }}
+
+    QLabel#frpcManagerDescription {{
+        color: {tokens["text"]};
+        font-size: 16px;
+    }}
+
     QLabel#pathLabel {{
         color: {tokens["muted"]};
         font-size: 12px;
@@ -298,10 +309,96 @@ def _build_qss(tokens: Mapping[str, str]) -> str:
     QFrame#mainMessageFrame,
     QFrame#controlSurface,
     QFrame#toolbarSurface,
-    QFrame#formSurface {{
+    QFrame#formSurface,
+    QFrame#frpcConfigPageShell,
+    QFrame#frpcManagerToolbar {{
         border: 1px solid {tokens["border"]};
         border-radius: 8px;
         background-color: {tokens["surface"]};
+    }}
+
+    QFrame#frpcConfigPageShell {{
+        border-color: {tokens["border_strong"]};
+    }}
+
+    QFrame#frpcManagerToolbar {{
+        border-radius: 2px;
+    }}
+
+    QScrollArea#frpcConfigScrollArea {{
+        border: 1px solid {tokens["border_strong"]};
+        border-radius: 2px;
+        background-color: {tokens["surface"]};
+    }}
+
+    QWidget#frpcConfigGridContainer {{
+        background-color: {tokens["surface"]};
+    }}
+
+    QLabel#emptyConfigLabel {{
+        color: {tokens["muted"]};
+        font-size: 14px;
+        font-weight: 600;
+    }}
+
+    QFrame#frpcProxyCard {{
+        border: 1px solid {tokens["border_strong"]};
+        border-radius: 8px;
+        background-color: {tokens["surface_alt"]};
+    }}
+
+    QWidget#proxyCardHeader,
+    QWidget#proxyCardBody {{
+        background-color: transparent;
+    }}
+
+    QFrame#proxyCardDivider {{
+        border: none;
+        background-color: {tokens["border_strong"]};
+    }}
+
+    QLabel#proxyCardTitle {{
+        color: {tokens["text"]};
+        font-size: 16px;
+        font-weight: 700;
+    }}
+
+    QLabel#proxyTypeBadge {{
+        border-radius: 4px;
+        font-size: 15px;
+        font-weight: 800;
+        padding: 2px 12px;
+    }}
+
+    QLabel#proxyTypeBadge[proxyType="tcp"] {{
+        color: #052e16;
+        border: 1px solid #65a30d;
+        background-color: #bbf7d0;
+    }}
+
+    QLabel#proxyTypeBadge[proxyType="udp"],
+    QLabel#proxyTypeBadge[proxyType="p2p"] {{
+        color: #450a0a;
+        border: 1px solid #dc2626;
+        background-color: #fecaca;
+    }}
+
+    QLabel#proxyTypeBadge[proxyType="unknown"] {{
+        color: {tokens["text"]};
+        border: 1px solid {tokens["border_strong"]};
+        background-color: {tokens["button"]};
+    }}
+
+    QLabel#proxyFieldKey,
+    QLabel#proxyFieldValue {{
+        min-height: 30px;
+        border: 1px solid {tokens["border_strong"]};
+        border-radius: 4px;
+        background-color: {tokens["input"]};
+        color: {tokens["text"]};
+        font-size: 14px;
+        font-weight: 600;
+        padding: 2px 8px;
     }}
 
     QFrame#mainMessageFrame {{
@@ -408,6 +505,40 @@ def _build_qss(tokens: Mapping[str, str]) -> str:
     QPushButton#secondaryButton {{
         color: {tokens["text"]};
         background-color: {tokens["button"]};
+    }}
+
+    QPushButton#addConfigTextButton {{
+        min-height: 38px;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        background-color: transparent;
+        color: {tokens["text"]};
+        font-size: 16px;
+        font-weight: 700;
+    }}
+
+    QPushButton#addConfigTextButton:hover {{
+        background-color: {tokens["button_hover"]};
+    }}
+
+    QPushButton#addConfigIconButton {{
+        min-width: 38px;
+        max-width: 38px;
+        min-height: 38px;
+        max-height: 38px;
+        padding: 0;
+        border-radius: 2px;
+        border: 1px solid {tokens["border_strong"]};
+        background-color: {tokens["surface"]};
+        color: {tokens["text"]};
+        font-size: 18px;
+        font-weight: 800;
+    }}
+
+    QPushButton#addConfigIconButton:hover {{
+        border-color: {tokens["primary"]};
+        background-color: {tokens["button_hover"]};
     }}
 
     QCheckBox#switchButton {{
