@@ -38,6 +38,28 @@ class FrpsOpenPanel(QWidget):
         """页面关闭或应用退出时，停止正在运行的 frps。"""
         self.frps_controller.shutdown()
 
+    def start_frps(self) -> bool:
+        """由外部页面请求启动 frps。"""
+        if self.frps_controller.is_running():
+            self._set_switch_checked(True)
+            return False
+
+        self.open_switch.setEnabled(False)
+        if not self.frps_controller.start_frps():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        return True
+
+    def stop_frps(self) -> bool:
+        """由外部页面请求停止 frps。"""
+        self.open_switch.setEnabled(False)
+        if not self.frps_controller.stop_frps():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        return True
+
     def _build_ui(self) -> None:
         """创建本功能模块内部布局。"""
         main_layout = QVBoxLayout(self)
@@ -70,17 +92,11 @@ class FrpsOpenPanel(QWidget):
         if self._syncing_switch:
             return
 
-        self.open_switch.setEnabled(False)
-
         if checked:
-            if not self.frps_controller.start_frps():
-                self._set_switch_checked(False)
-                self.open_switch.setEnabled(True)
+            self.start_frps()
             return
 
-        if not self.frps_controller.stop_frps():
-            self._set_switch_checked(False)
-            self.open_switch.setEnabled(True)
+        self.stop_frps()
 
     def _handle_frps_state_changed(self, state: str) -> None:
         """根据 controller 返回的状态更新界面。"""

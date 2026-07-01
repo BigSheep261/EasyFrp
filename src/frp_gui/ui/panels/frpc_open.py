@@ -61,6 +61,28 @@ class FrpcOpenPanel(QWidget):
         """页面关闭或应用退出时，停止正在运行的 frpc。"""
         self.frpc_controller.shutdown()
 
+    def start_frpc(self) -> bool:
+        """由外部页面请求启动 frpc。"""
+        if self.frpc_controller.is_running():
+            self._set_switch_checked(True)
+            return False
+
+        self.open_switch.setEnabled(False)
+        if not self.frpc_controller.start_frpc():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        return True
+
+    def stop_frpc(self) -> bool:
+        """由外部页面请求停止 frpc。"""
+        self.open_switch.setEnabled(False)
+        if not self.frpc_controller.stop_frpc():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        return True
+
     def _build_ui(self) -> None:
         """创建本功能模块内部布局。"""
         main_layout = QVBoxLayout(self)
@@ -95,17 +117,11 @@ class FrpcOpenPanel(QWidget):
 
         # 启动/停止是异步过程。
         # 在 controller 返回最终状态前，先禁用开关，避免用户连续点击造成状态混乱。
-        self.open_switch.setEnabled(False)
-
         if checked:
-            if not self.frpc_controller.start_frpc():
-                self._set_switch_checked(False)
-                self.open_switch.setEnabled(True)
+            self.start_frpc()
             return
 
-        if not self.frpc_controller.stop_frpc():
-            self._set_switch_checked(False)
-            self.open_switch.setEnabled(True)
+        self.stop_frpc()
 
     def _handle_frpc_state_changed(self, state: str) -> None:
         """根据 controller 返回的状态更新界面。"""

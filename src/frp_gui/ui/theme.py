@@ -5,12 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication, QWidget
 from qt_material import apply_stylesheet
 
 
-THEME_SETTINGS_KEY = "ui/theme"
 DEFAULT_THEME_KEY = "ops_dark"
 
 
@@ -154,7 +152,12 @@ def get_theme_variant(theme_key: str | None) -> ThemeVariant:
 
 def get_saved_theme_key() -> str:
     """Read the user's saved theme choice."""
-    value = QSettings().value(THEME_SETTINGS_KEY, DEFAULT_THEME_KEY)
+    from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+
+    try:
+        value = EasyfrpConfigService().load_settings().get("theme_key")
+    except (OSError, ValueError):
+        return DEFAULT_THEME_KEY
     return value if isinstance(value, str) else DEFAULT_THEME_KEY
 
 
@@ -171,7 +174,12 @@ def apply_app_theme(
     application.setProperty("easyfrpTheme", variant.key)
 
     if persist:
-        QSettings().setValue(THEME_SETTINGS_KEY, variant.key)
+        from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+
+        service = EasyfrpConfigService()
+        settings = service.load_settings()
+        settings["theme_key"] = variant.key
+        service.save_settings(settings)
 
     return variant
 

@@ -46,6 +46,10 @@ class FrpcControlView(QWidget):
         """让页面内的功能模块释放运行中的资源。"""
         self.frpc_open_panel.shutdown()
 
+    def start_frpc(self) -> bool:
+        """请求页面内的功能模块启动 frpc。"""
+        return self.frpc_open_panel.start_frpc()
+
     def _build_ui(self) -> None:
         """创建页面级布局。"""
         layout = QVBoxLayout(self)
