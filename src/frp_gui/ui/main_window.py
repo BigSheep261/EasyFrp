@@ -26,12 +26,12 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from frp_gui.core.paths import (
+from frp_gui.backend.shared.paths import (
     APP_ICON_PATH,
     HEADER_LOGO_PATH,
     TRAY_ICON_PATH,
 )
-from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+from frp_gui.backend.settings.settings_service import SettingsService
 from frp_gui.ui.pages.easyfrp_config_view import EasyfrpConfigView
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
@@ -444,7 +444,7 @@ class MainWindow(QMainWindow):
     def _apply_startup_settings(self) -> None:
         """根据 config/config.json 应用启动时设置。"""
         try:
-            settings = EasyfrpConfigService().load_settings()
+            settings = SettingsService().load_settings()
         except (OSError, ValueError) as error:
             self._refresh_sidebar_for_mode("frpc")
             self._show_main_message(f"读取 EasyFrp 设置失败：{error}")

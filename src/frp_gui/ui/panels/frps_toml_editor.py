@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from frp_gui.core.frps_config_service import FrpsConfigService
+from frp_gui.backend.frps.config_service import FrpsConfigService
 from frp_gui.ui.theme import set_widget_state
 
 

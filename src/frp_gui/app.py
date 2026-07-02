@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 
-from frp_gui.core.paths import APP_ICON_PATH, ensure_runtime_directories
+from frp_gui.backend.shared.paths import APP_ICON_PATH, ensure_runtime_directories
 from frp_gui.ui.main_window import MainWindow
 from frp_gui.ui.theme import apply_app_theme, get_saved_theme_key
 

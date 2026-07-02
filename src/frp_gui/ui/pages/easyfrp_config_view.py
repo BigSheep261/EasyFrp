@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+from frp_gui.backend.settings.settings_service import SettingsService
 from frp_gui.ui.theme import (
     DEFAULT_THEME_KEY,
     get_theme_variant,
@@ -32,7 +32,7 @@ class EasyfrpConfigView(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.config_service = EasyfrpConfigService()
+        self.config_service = SettingsService()
         self.current_settings: dict[str, str | bool] = {}
 
         self.title_label = QLabel("EasyFrp 设置", self)

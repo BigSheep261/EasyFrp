@@ -8,7 +8,7 @@ import sys
 def _application_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parents[3]
+    return Path(__file__).resolve().parents[4]
 
 
 def _bundle_root() -> Path:
@@ -48,3 +48,4 @@ def ensure_runtime_directories() -> None:
         target_path = CONFIG_DIR / source_path.name
         if not target_path.exists():
             shutil.copy2(source_path, target_path)
+

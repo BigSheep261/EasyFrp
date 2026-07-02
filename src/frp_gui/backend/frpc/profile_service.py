@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 from typing import Any
 
-from frp_gui.core.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
+from frp_gui.backend.shared.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
 from frp_gui.models.frpc import (
     FrpcGlobalConfig,
     FrpcProfileRole,
@@ -29,7 +29,11 @@ class FrpcProfileService:
 
     _VALID_PROFILE_NAME = re.compile(r"^[^<>:\"/\\|?*\x00-\x1f]+$")
 
-    def __init__(self, global_dir: Path | None = None, connection_dir: Path | None = None ) -> None:
+    def __init__(
+        self,
+        global_dir: Path | None = None,
+        connection_dir: Path | None = None,
+    ) -> None:
         self.global_dir = global_dir or FRPC_GLOBAL_PROFILE_DIR
         self.connection_dir = connection_dir or FRPC_CONNECTION_PROFILE_DIR
 
@@ -106,3 +110,4 @@ class FrpcProfileService:
         if not isinstance(data, dict):
             raise ValueError("JSON 配置档案根节点必须是对象。")
         return data
+

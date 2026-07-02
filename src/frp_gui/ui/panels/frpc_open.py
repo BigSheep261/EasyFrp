@@ -2,20 +2,20 @@
 
 panels 层负责把 widgets 组合成一个明确的业务功能。
 这个模块会导入 widgets/switch_button.py 中的 SwitchButton，
-并把它和 FrpcController 的启动、停止函数绑定起来。
+并把它和 FrpcProcessService 的启动、停止函数绑定起来。
 """
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget
 
-from frp_gui.core.frpc_controller import FrpcController
+from frp_gui.backend.frpc.process_service import FrpcProcessService
 from frp_gui.ui.widgets.switch_button import SwitchButton
 
 
 class FrpcOpenPanel(QWidget):
     """frpc 进程控制面板。
 
-    这个类属于“功能模块”，所以它可以知道 frpc 业务，并持有 FrpcController。
+    这个类属于“功能模块”，所以它可以知道 frpc 业务，并持有 FrpcProcessService。
     它负责：
     1. 展示当前 frpc 状态。
     2. 响应开关按钮的打开/关闭。
@@ -33,9 +33,9 @@ class FrpcOpenPanel(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        # controller 负责真正的进程生命周期管理。
-        # UI 不直接操作 QProcess，而是调用 controller 暴露出来的方法。
-        self.frpc_controller = FrpcController(parent=self)
+        # process service 负责真正的进程生命周期管理。
+        # UI 不直接操作 QProcess，而是调用 service 暴露出来的方法。
+        self.frpc_process_service = FrpcProcessService(parent=self)
 
         # 当程序主动同步开关状态时，setChecked() 也会触发 toggled 信号。
         # 这个标记用来区分“用户点击”和“程序同步状态”，避免递归触发启动/停止。
@@ -59,16 +59,16 @@ class FrpcOpenPanel(QWidget):
 
     def shutdown(self) -> None:
         """页面关闭或应用退出时，停止正在运行的 frpc。"""
-        self.frpc_controller.shutdown()
+        self.frpc_process_service.shutdown()
 
     def start_frpc(self) -> bool:
         """由外部页面请求启动 frpc。"""
-        if self.frpc_controller.is_running():
+        if self.frpc_process_service.is_running():
             self._set_switch_checked(True)
             return False
 
         self.open_switch.setEnabled(False)
-        if not self.frpc_controller.start_frpc():
+        if not self.frpc_process_service.start_frpc():
             self._set_switch_checked(False)
             self.open_switch.setEnabled(True)
             return False
@@ -77,7 +77,7 @@ class FrpcOpenPanel(QWidget):
     def stop_frpc(self) -> bool:
         """由外部页面请求停止 frpc。"""
         self.open_switch.setEnabled(False)
-        if not self.frpc_controller.stop_frpc():
+        if not self.frpc_process_service.stop_frpc():
             self._set_switch_checked(False)
             self.open_switch.setEnabled(True)
             return False
@@ -106,9 +106,9 @@ class FrpcOpenPanel(QWidget):
     def _connect_signals(self) -> None:
         """连接 UI 信号和 controller 信号。"""
         self.open_switch.toggled.connect(self._handle_switch_toggled)
-        self.frpc_controller.state_changed.connect(self._handle_frpc_state_changed)
-        self.frpc_controller.output_received.connect(self._append_log)
-        self.frpc_controller.error_occurred.connect(self._handle_frpc_error)
+        self.frpc_process_service.state_changed.connect(self._handle_frpc_state_changed)
+        self.frpc_process_service.output_received.connect(self._append_log)
+        self.frpc_process_service.error_occurred.connect(self._handle_frpc_error)
 
     def _handle_switch_toggled(self, checked: bool) -> None:
         """用户点击开关后，启动或停止 frpc。"""
@@ -124,7 +124,7 @@ class FrpcOpenPanel(QWidget):
         self.stop_frpc()
 
     def _handle_frpc_state_changed(self, state: str) -> None:
-        """根据 controller 返回的状态更新界面。"""
+        """根据 process service 返回的状态更新界面。"""
         labels = {
             "stopped": "未运行",
             "starting": "启动中",

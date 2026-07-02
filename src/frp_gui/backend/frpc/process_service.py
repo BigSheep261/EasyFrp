@@ -1,14 +1,14 @@
-"""frpc 进程生命周期管理。"""
+"""frpc process lifecycle service."""
 
 from enum import Enum
 from pathlib import Path
 
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
-from frp_gui.core.paths import CONFIG_DIR, RUNTIME_DIR
+from frp_gui.backend.shared.paths import CONFIG_DIR, RUNTIME_DIR
 
 
-class FrpcState(Enum):
+class FrpcProcessState(Enum):
     """受管 frpc 进程的运行状态。"""
 
     STOPPED = "stopped"
@@ -17,11 +17,11 @@ class FrpcState(Enum):
     STOPPING = "stopping"
 
 
-class FrpcController(QObject):
+class FrpcProcessService(QObject):
     """启动、停止并观察单个 frpc 进程。"""
 
-    # 这三个信号是 core 和 UI 之间的通信边界：
-    # UI 只监听状态、输出和错误，不直接操作 QProcess 的内部细节。
+    # 这三个信号是 backend 和 UI/ViewModel 之间的通信边界：
+    # 调用方只监听状态、输出和错误，不直接操作 QProcess 的内部细节。
     state_changed = pyqtSignal(str)
     output_received = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
@@ -37,7 +37,7 @@ class FrpcController(QObject):
         # 之后增加配置管理时，可以从外部传入这两个路径来覆盖默认值。
         self.executable_path = executable_path or RUNTIME_DIR / "frpc.exe"
         self.config_path = config_path or CONFIG_DIR / "frpc.toml"
-        self._state = FrpcState.STOPPED
+        self._state = FrpcProcessState.STOPPED
         self._process = QProcess(self)
 
         # QProcess 是异步的：启动、退出、输出和错误都通过信号回调处理，
@@ -49,8 +49,8 @@ class FrpcController(QObject):
         self._process.errorOccurred.connect(self._handle_error)
 
     @property
-    def state(self) -> FrpcState:
-        """返回当前控制器状态。"""
+    def state(self) -> FrpcProcessState:
+        """返回当前进程服务状态。"""
         return self._state
 
     def is_running(self) -> bool:
@@ -64,19 +64,19 @@ class FrpcController(QObject):
             self.error_occurred.emit("frpc 已经在运行中。")
             return False
 
-        # 先做本地路径检查，把常见错误直接反馈给 UI。
+        # 先做本地路径检查，把常见错误直接反馈给调用方。
         # 如果文件存在但权限不足，后续 QProcess.errorOccurred 会继续给出错误。
         if not self.executable_path.exists():
             self.error_occurred.emit(f"未找到 frpc 可执行文件：{self.executable_path}")
-            self._set_state(FrpcState.STOPPED)
+            self._set_state(FrpcProcessState.STOPPED)
             return False
 
         if not self.config_path.exists():
             self.error_occurred.emit(f"未找到 frpc 配置文件：{self.config_path}")
-            self._set_state(FrpcState.STOPPED)
+            self._set_state(FrpcProcessState.STOPPED)
             return False
 
-        self._set_state(FrpcState.STARTING)
+        self._set_state(FrpcProcessState.STARTING)
         # 工作目录设为 frpc.exe 所在目录，避免 frpc 依赖相对路径时找错位置。
         self._process.setWorkingDirectory(str(self.executable_path.parent))
         self._process.start(str(self.executable_path), ["-c", str(self.config_path)])
@@ -85,10 +85,10 @@ class FrpcController(QObject):
     def stop_frpc(self, force_after_ms: int = 3000) -> bool:
         """请求正在运行的 frpc 进程停止。"""
         if not self.is_running():
-            self._set_state(FrpcState.STOPPED)
+            self._set_state(FrpcProcessState.STOPPED)
             return False
 
-        self._set_state(FrpcState.STOPPING)
+        self._set_state(FrpcProcessState.STOPPING)
         # terminate 是温和退出请求；如果进程没有响应，稍后再强制 kill。
         self._process.terminate()
         QTimer.singleShot(force_after_ms, self._kill_if_still_running)
@@ -99,7 +99,7 @@ class FrpcController(QObject):
         if not self.is_running():
             return
 
-        self._set_state(FrpcState.STOPPING)
+        self._set_state(FrpcProcessState.STOPPING)
         # 应用退出时不能只发异步 terminate，否则 GUI 退出后 frpc 可能仍在后台。
         # 这里会短暂等待进程退出，超时后再强制结束。
         self._process.terminate()
@@ -107,7 +107,7 @@ class FrpcController(QObject):
             self._process.kill()
             self._process.waitForFinished(timeout_ms)
 
-    def _set_state(self, state: FrpcState) -> None:
+    def _set_state(self, state: FrpcProcessState) -> None:
         # 状态不变时不重复发信号，避免 UI 做无意义刷新。
         if self._state == state:
             return
@@ -128,7 +128,7 @@ class FrpcController(QObject):
             self.output_received.emit(text)
 
     def _handle_started(self) -> None:
-        self._set_state(FrpcState.RUNNING)
+        self._set_state(FrpcProcessState.RUNNING)
 
     def _handle_finished(
         self,
@@ -137,18 +137,18 @@ class FrpcController(QObject):
     ) -> None:
         # 主动停止时，Qt 有时也会把强制结束报告成 CrashExit。
         # 这种情况对用户来说是“已停止”，不应该显示成异常崩溃。
-        was_stopping = self._state == FrpcState.STOPPING
+        was_stopping = self._state == FrpcProcessState.STOPPING
         if exit_status == QProcess.ExitStatus.CrashExit and not was_stopping:
             self.error_occurred.emit(f"frpc 异常退出，退出码：{exit_code}")
         elif was_stopping:
             self.output_received.emit("frpc 已停止。")
         else:
             self.output_received.emit(f"frpc 已退出，退出码：{exit_code}")
-        self._set_state(FrpcState.STOPPED)
+        self._set_state(FrpcProcessState.STOPPED)
 
     def _handle_error(self, error: QProcess.ProcessError) -> None:
         # 用户主动停止后触发的 Crashed 信号不作为错误展示。
-        if error == QProcess.ProcessError.Crashed and self._state == FrpcState.STOPPING:
+        if error == QProcess.ProcessError.Crashed and self._state == FrpcProcessState.STOPPING:
             return
 
         messages = {
@@ -164,9 +164,14 @@ class FrpcController(QObject):
             QProcess.ProcessError.FailedToStart,
             QProcess.ProcessError.Crashed,
         }:
-            self._set_state(FrpcState.STOPPED)
+            self._set_state(FrpcProcessState.STOPPED)
 
     def _kill_if_still_running(self) -> None:
         # stop_frpc 发出 terminate 后，如果 frpc 迟迟没有退出，就执行最后兜底。
-        if self._state == FrpcState.STOPPING and self.is_running():
+        if self._state == FrpcProcessState.STOPPING and self.is_running():
             self._process.kill()
+
+
+FrpcState = FrpcProcessState
+FrpcController = FrpcProcessService
+

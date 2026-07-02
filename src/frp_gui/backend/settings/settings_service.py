@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from frp_gui.core.paths import CONFIG_DIR
+from frp_gui.backend.shared.paths import CONFIG_DIR
 from frp_gui.utils import LocalFileUtils
 
 DEFAULT_EASYFRP_SETTINGS: dict[str, str | bool] = {
@@ -16,7 +16,7 @@ DEFAULT_EASYFRP_SETTINGS: dict[str, str | bool] = {
 VALID_CLIENT_MODES = {"frpc", "frps"}
 
 
-class EasyfrpConfigService:
+class SettingsService:
     """读取、补全并保存 ``config/config.json``。"""
 
     def __init__(self, config_path: Path | None = None) -> None:
@@ -68,3 +68,7 @@ class EasyfrpConfigService:
 
     def _as_bool(self, value: Any) -> bool:
         return value if isinstance(value, bool) else False
+
+
+EasyfrpConfigService = SettingsService
+

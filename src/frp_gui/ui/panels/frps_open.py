@@ -3,7 +3,7 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget
 
-from frp_gui.core.frps_controller import FrpsController
+from frp_gui.backend.frps.process_service import FrpsProcessService
 from frp_gui.ui.widgets.switch_button import SwitchButton
 
 
@@ -15,7 +15,7 @@ class FrpsOpenPanel(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.frps_controller = FrpsController(parent=self)
+        self.frps_process_service = FrpsProcessService(parent=self)
         self._syncing_switch = False
 
         self.status_label = QLabel("状态：未运行", self)
@@ -36,16 +36,16 @@ class FrpsOpenPanel(QWidget):
 
     def shutdown(self) -> None:
         """页面关闭或应用退出时，停止正在运行的 frps。"""
-        self.frps_controller.shutdown()
+        self.frps_process_service.shutdown()
 
     def start_frps(self) -> bool:
         """由外部页面请求启动 frps。"""
-        if self.frps_controller.is_running():
+        if self.frps_process_service.is_running():
             self._set_switch_checked(True)
             return False
 
         self.open_switch.setEnabled(False)
-        if not self.frps_controller.start_frps():
+        if not self.frps_process_service.start_frps():
             self._set_switch_checked(False)
             self.open_switch.setEnabled(True)
             return False
@@ -54,7 +54,7 @@ class FrpsOpenPanel(QWidget):
     def stop_frps(self) -> bool:
         """由外部页面请求停止 frps。"""
         self.open_switch.setEnabled(False)
-        if not self.frps_controller.stop_frps():
+        if not self.frps_process_service.stop_frps():
             self._set_switch_checked(False)
             self.open_switch.setEnabled(True)
             return False
@@ -83,9 +83,9 @@ class FrpsOpenPanel(QWidget):
     def _connect_signals(self) -> None:
         """连接 UI 信号和 controller 信号。"""
         self.open_switch.toggled.connect(self._handle_switch_toggled)
-        self.frps_controller.state_changed.connect(self._handle_frps_state_changed)
-        self.frps_controller.output_received.connect(self._append_log)
-        self.frps_controller.error_occurred.connect(self._handle_frps_error)
+        self.frps_process_service.state_changed.connect(self._handle_frps_state_changed)
+        self.frps_process_service.output_received.connect(self._append_log)
+        self.frps_process_service.error_occurred.connect(self._handle_frps_error)
 
     def _handle_switch_toggled(self, checked: bool) -> None:
         """用户点击开关后，启动或停止 frps。"""

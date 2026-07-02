@@ -152,10 +152,10 @@ def get_theme_variant(theme_key: str | None) -> ThemeVariant:
 
 def get_saved_theme_key() -> str:
     """Read the user's saved theme choice."""
-    from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+    from frp_gui.backend.settings.settings_service import SettingsService
 
     try:
-        value = EasyfrpConfigService().load_settings().get("theme_key")
+        value = SettingsService().load_settings().get("theme_key")
     except (OSError, ValueError):
         return DEFAULT_THEME_KEY
     return value if isinstance(value, str) else DEFAULT_THEME_KEY
@@ -174,9 +174,9 @@ def apply_app_theme(
     application.setProperty("easyfrpTheme", variant.key)
 
     if persist:
-        from frp_gui.core.easyfrp_config_service import EasyfrpConfigService
+        from frp_gui.backend.settings.settings_service import SettingsService
 
-        service = EasyfrpConfigService()
+        service = SettingsService()
         settings = service.load_settings()
         settings["theme_key"] = variant.key
         service.save_settings(settings)

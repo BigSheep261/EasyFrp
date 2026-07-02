@@ -1,14 +1,14 @@
-"""frps 进程生命周期管理。"""
+"""frps process lifecycle service."""
 
 from enum import Enum
 from pathlib import Path
 
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
-from frp_gui.core.paths import CONFIG_DIR, RUNTIME_DIR
+from frp_gui.backend.shared.paths import CONFIG_DIR, RUNTIME_DIR
 
 
-class FrpsState(Enum):
+class FrpsProcessState(Enum):
     """受管 frps 进程的运行状态。"""
 
     STOPPED = "stopped"
@@ -17,7 +17,7 @@ class FrpsState(Enum):
     STOPPING = "stopping"
 
 
-class FrpsController(QObject):
+class FrpsProcessService(QObject):
     """启动、停止并观察单个 frps 进程。"""
 
     state_changed = pyqtSignal(str)
@@ -33,7 +33,7 @@ class FrpsController(QObject):
         super().__init__(parent)
         self.executable_path = executable_path or RUNTIME_DIR / "frps.exe"
         self.config_path = config_path or CONFIG_DIR / "frps.toml"
-        self._state = FrpsState.STOPPED
+        self._state = FrpsProcessState.STOPPED
         self._process = QProcess(self)
 
         self._process.readyReadStandardOutput.connect(self._read_stdout)
@@ -43,8 +43,8 @@ class FrpsController(QObject):
         self._process.errorOccurred.connect(self._handle_error)
 
     @property
-    def state(self) -> FrpsState:
-        """返回当前控制器状态。"""
+    def state(self) -> FrpsProcessState:
+        """返回当前进程服务状态。"""
         return self._state
 
     def is_running(self) -> bool:
@@ -59,15 +59,15 @@ class FrpsController(QObject):
 
         if not self.executable_path.exists():
             self.error_occurred.emit(f"未找到 frps 可执行文件：{self.executable_path}")
-            self._set_state(FrpsState.STOPPED)
+            self._set_state(FrpsProcessState.STOPPED)
             return False
 
         if not self.config_path.exists():
             self.error_occurred.emit(f"未找到 frps 配置文件：{self.config_path}")
-            self._set_state(FrpsState.STOPPED)
+            self._set_state(FrpsProcessState.STOPPED)
             return False
 
-        self._set_state(FrpsState.STARTING)
+        self._set_state(FrpsProcessState.STARTING)
         self._process.setWorkingDirectory(str(self.executable_path.parent))
         self._process.start(str(self.executable_path), ["-c", str(self.config_path)])
         return True
@@ -75,10 +75,10 @@ class FrpsController(QObject):
     def stop_frps(self, force_after_ms: int = 3000) -> bool:
         """请求正在运行的 frps 进程停止。"""
         if not self.is_running():
-            self._set_state(FrpsState.STOPPED)
+            self._set_state(FrpsProcessState.STOPPED)
             return False
 
-        self._set_state(FrpsState.STOPPING)
+        self._set_state(FrpsProcessState.STOPPING)
         self._process.terminate()
         QTimer.singleShot(force_after_ms, self._kill_if_still_running)
         return True
@@ -88,13 +88,13 @@ class FrpsController(QObject):
         if not self.is_running():
             return
 
-        self._set_state(FrpsState.STOPPING)
+        self._set_state(FrpsProcessState.STOPPING)
         self._process.terminate()
         if not self._process.waitForFinished(timeout_ms):
             self._process.kill()
             self._process.waitForFinished(timeout_ms)
 
-    def _set_state(self, state: FrpsState) -> None:
+    def _set_state(self, state: FrpsProcessState) -> None:
         if self._state == state:
             return
 
@@ -113,24 +113,24 @@ class FrpsController(QObject):
             self.output_received.emit(text)
 
     def _handle_started(self) -> None:
-        self._set_state(FrpsState.RUNNING)
+        self._set_state(FrpsProcessState.RUNNING)
 
     def _handle_finished(
         self,
         exit_code: int,
         exit_status: QProcess.ExitStatus,
     ) -> None:
-        was_stopping = self._state == FrpsState.STOPPING
+        was_stopping = self._state == FrpsProcessState.STOPPING
         if exit_status == QProcess.ExitStatus.CrashExit and not was_stopping:
             self.error_occurred.emit(f"frps 异常退出，退出码：{exit_code}")
         elif was_stopping:
             self.output_received.emit("frps 已停止。")
         else:
             self.output_received.emit(f"frps 已退出，退出码：{exit_code}")
-        self._set_state(FrpsState.STOPPED)
+        self._set_state(FrpsProcessState.STOPPED)
 
     def _handle_error(self, error: QProcess.ProcessError) -> None:
-        if error == QProcess.ProcessError.Crashed and self._state == FrpsState.STOPPING:
+        if error == QProcess.ProcessError.Crashed and self._state == FrpsProcessState.STOPPING:
             return
 
         messages = {
@@ -146,8 +146,13 @@ class FrpsController(QObject):
             QProcess.ProcessError.FailedToStart,
             QProcess.ProcessError.Crashed,
         }:
-            self._set_state(FrpsState.STOPPED)
+            self._set_state(FrpsProcessState.STOPPED)
 
     def _kill_if_still_running(self) -> None:
-        if self._state == FrpsState.STOPPING and self.is_running():
+        if self._state == FrpsProcessState.STOPPING and self.is_running():
             self._process.kill()
+
+
+FrpsState = FrpsProcessState
+FrpsController = FrpsProcessService
+
