@@ -8,36 +8,27 @@ main_window 是整个 UI 的外壳。
 """
 
 from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, Qt, QTimer
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QMouseEvent, QPixmap
+from PyQt6.QtGui import QCloseEvent, QMouseEvent
 from PyQt6.QtWidgets import (
     QAbstractItemView,
-    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
-    QMenu,
     QPushButton,
     QStackedWidget,
-    QSystemTrayIcon,
     QVBoxLayout,
     QWidget,
 )
 
-from frp_gui.backend.shared.paths import (
-    APP_ICON_PATH,
-    HEADER_LOGO_PATH,
-    TRAY_ICON_PATH,
-)
 from frp_gui.backend.settings.settings_service import SettingsService
 from frp_gui.ui.pages.easyfrp_config_view import EasyfrpConfigView
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
 from frp_gui.ui.pages.frps_config_view import FrpsConfigView
 from frp_gui.ui.pages.frps_control_view import FrpsControlView
-from frp_gui.ui.theme import apply_app_theme
 
 WINDOW_OPACITY = 1
 MIN_WINDOW_WIDTH = 760
@@ -58,8 +49,6 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("EasyFrp")
-        if APP_ICON_PATH.exists():
-            self.setWindowIcon(QIcon(str(APP_ICON_PATH)))
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
         # 设置整个主窗口透明度。Qt 使用 0.0 到 1.0 表示窗口不透明度：
         # 1.0 表示完全不透明，0.75 表示约 75% 不透明，也就是能看到一些背景。
@@ -73,7 +62,6 @@ class MainWindow(QMainWindow):
         self.minimize_button = QPushButton("—", self)
         self.maximize_button = QPushButton("□", self)
         self.close_button = QPushButton("×", self)
-        self.logo_label = QLabel(self)
         self.main_message_frame = QFrame(self)
         self.main_message_label = QLabel("就绪", self)
         self._drag_position: QPoint | None = None
@@ -82,7 +70,6 @@ class MainWindow(QMainWindow):
         self._resize_start_position = QPoint()
         self._sidebar_page_routes: list[int] = []
         self._client_mode = "frpc"
-        self.logo_label.setObjectName("logoLabel")
         self.sidebar_container.setObjectName("sidebarContainer")
         self.content_container.setObjectName("contentContainer")
         self.page_stack = QStackedWidget(self)
@@ -102,18 +89,14 @@ class MainWindow(QMainWindow):
         self.frps_control_view = FrpsControlView(self)
         self.frps_config_view = FrpsConfigView(self)
         self.easyfrp_config_view = EasyfrpConfigView(self)
-        self.tray_icon: QSystemTrayIcon | None = None
 
         self._build_ui()
         self._install_window_event_filters()
-        self._build_tray_icon()
         self._connect_signals()
         self._apply_startup_settings()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """确保关闭 GUI 时，页面内正在运行的进程也能退出。"""
-        if self.tray_icon is not None:
-            self.tray_icon.hide()
         self.frpc_control_view.shutdown()
         self.frps_control_view.shutdown()
         super().closeEvent(event)
@@ -272,28 +255,10 @@ class MainWindow(QMainWindow):
         sidebar_layout.setContentsMargins(12, 14, 12, 10)
         sidebar_layout.setSpacing(10)
 
-        self.logo_label.setFixedHeight(48)
-        self.logo_label.setAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        )
-        if HEADER_LOGO_PATH.exists():
-            logo_pixmap = QPixmap(str(HEADER_LOGO_PATH))
-            self.logo_label.setPixmap(
-                logo_pixmap.scaled(
-                    156,
-                    42,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-            )
-        else:
-            self.logo_label.setText("EasyFrp")
-
         self.sidebar.setObjectName("sidebarNavigation")
         self.sidebar.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.sidebar.setSpacing(4)
 
-        sidebar_layout.addWidget(self.logo_label)
         sidebar_layout.addWidget(self.sidebar, stretch=1)
         sidebar_layout.addWidget(self.main_message_frame)
 
@@ -324,40 +289,6 @@ class MainWindow(QMainWindow):
         message_layout.addWidget(message_title)
         message_layout.addWidget(self.main_message_label)
 
-    def _build_tray_icon(self) -> None:
-        """创建 Windows 右下角系统托盘图标。
-
-        QSystemTrayIcon 必须被对象属性持有，不能只放在局部变量里。
-        如果局部变量在函数结束后被回收，托盘图标也会随之消失。
-        """
-        if not QSystemTrayIcon.isSystemTrayAvailable():
-            self._show_main_message("当前系统不支持托盘图标")
-            return
-
-        tray_icon_path = TRAY_ICON_PATH if TRAY_ICON_PATH.exists() else APP_ICON_PATH
-        if not tray_icon_path.exists():
-            self._show_main_message("未找到托盘图标资源")
-            return
-
-        self.tray_icon = QSystemTrayIcon(QIcon(str(tray_icon_path)), self)
-        self.tray_icon.setToolTip("EasyFrp")
-
-        tray_menu = QMenu(self)
-
-        show_action = QAction("显示主窗口", self)
-        show_action.triggered.connect(self._show_from_tray)
-
-        quit_action = QAction("退出", self)
-        quit_action.triggered.connect(lambda: self.close())
-
-        tray_menu.addAction(show_action)
-        tray_menu.addSeparator()
-        tray_menu.addAction(quit_action)
-
-        self.tray_icon.setContextMenu(tray_menu)
-        self.tray_icon.activated.connect(self._handle_tray_icon_activated)
-        self.tray_icon.show()
-
     def _connect_signals(self) -> None:
         """连接主窗口级别的信号。"""
         self.sidebar.currentRowChanged.connect(self._handle_sidebar_row_changed)
@@ -376,7 +307,6 @@ class MainWindow(QMainWindow):
         self.easyfrp_config_view.status_message_changed.connect(
             self._show_main_message
         )
-        self.easyfrp_config_view.theme_changed.connect(self._handle_theme_changed)
         self.easyfrp_config_view.settings_changed.connect(
             self._handle_settings_changed
         )
@@ -529,15 +459,6 @@ class MainWindow(QMainWindow):
         selected_page = current_page if current_page == PAGE_SETTINGS else None
         self._refresh_sidebar_for_mode(client_mode, selected_page=selected_page)
 
-    def _handle_theme_changed(self, theme_key: str) -> None:
-        """Apply a selected UI variant from the settings page."""
-        application = QApplication.instance()
-        if application is None:
-            return
-
-        variant = apply_app_theme(application, theme_key)
-        self._show_main_message(f"界面风格已切换为：{variant.name}")
-
     def _toggle_maximized(self) -> None:
         """切换窗口最大化和普通大小。"""
         if self.isMaximized():
@@ -618,21 +539,3 @@ class MainWindow(QMainWindow):
             )
 
         self.setGeometry(geometry)
-
-    def _handle_tray_icon_activated(
-        self,
-        reason: QSystemTrayIcon.ActivationReason,
-    ) -> None:
-        """响应用户点击托盘图标。
-
-        Windows 上常见交互是双击托盘图标恢复主窗口。
-        右键菜单由 Qt 自动处理，不需要在这里额外判断。
-        """
-        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-            self._show_from_tray()
-
-    def _show_from_tray(self) -> None:
-        """从托盘菜单或双击托盘图标恢复主窗口。"""
-        self.showNormal()
-        self.raise_()
-        self.activateWindow()

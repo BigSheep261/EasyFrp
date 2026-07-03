@@ -23,7 +23,6 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.backend.frpc.config_service import FrpcConfigService
-from frp_gui.ui.theme import set_widget_state
 
 
 @dataclass(frozen=True)
@@ -130,9 +129,6 @@ class FrpcConfigManagerPanel(QWidget):
 
         self.add_label_button = QPushButton("添加配置", self)
         self.add_label_button.setObjectName("addConfigTextButton")
-        self.add_icon_button = QPushButton("+", self)
-        self.add_icon_button.setObjectName("addConfigIconButton")
-        self.add_icon_button.setToolTip("添加配置")
 
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setObjectName("frpcConfigScrollArea")
@@ -176,7 +172,6 @@ class FrpcConfigManagerPanel(QWidget):
         toolbar_layout.setSpacing(10)
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(self.add_label_button)
-        toolbar_layout.addWidget(self.add_icon_button)
 
         self.scroll_area.setWidget(self.grid_container)
 
@@ -186,7 +181,6 @@ class FrpcConfigManagerPanel(QWidget):
 
     def _connect_signals(self) -> None:
         self.add_label_button.clicked.connect(self._handle_add_clicked)
-        self.add_icon_button.clicked.connect(self._handle_add_clicked)
 
     def load_config(self) -> None:
         """Load current frpc.toml and render the proxy cards."""
@@ -317,11 +311,9 @@ class FrpcConfigManagerPanel(QWidget):
         QMessageBox.information(self, "需要确认", message)
 
     def _show_info(self, message: str) -> None:
-        set_widget_state(self.message_label, "info")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)
 
     def _show_error(self, message: str) -> None:
-        set_widget_state(self.message_label, "error")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)

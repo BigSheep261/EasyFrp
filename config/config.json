@@ -1,5 +1,4 @@
 {
-  "theme_key": "ops_dark",
   "client_mode": "frpc",
   "launch_at_start": false,
   "auto_run": false

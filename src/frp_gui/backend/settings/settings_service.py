@@ -7,7 +7,6 @@ from frp_gui.backend.shared.paths import CONFIG_DIR
 from frp_gui.utils import LocalFileUtils
 
 DEFAULT_EASYFRP_SETTINGS: dict[str, str | bool] = {
-    "theme_key": "ops_dark",
     "client_mode": "frpc",
     "launch_at_start": False,
     "auto_run": False,
@@ -52,10 +51,6 @@ class SettingsService:
     def _normalize_settings(self, data: dict[str, Any]) -> dict[str, str | bool]:
         settings = self.default_settings()
 
-        theme_key = data.get("theme_key")
-        if isinstance(theme_key, str) and theme_key.strip():
-            settings["theme_key"] = theme_key.strip()
-
         client_mode = data.get("client_mode")
         if isinstance(client_mode, str):
             normalized_mode = client_mode.strip()
@@ -71,4 +66,3 @@ class SettingsService:
 
 
 EasyfrpConfigService = SettingsService
-

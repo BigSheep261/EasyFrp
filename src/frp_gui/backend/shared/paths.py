@@ -27,12 +27,6 @@ FRPC_PROFILE_DIR = PROFILE_DIR / "frpc"
 FRPC_GLOBAL_PROFILE_DIR = FRPC_PROFILE_DIR / "global"
 FRPC_CONNECTION_PROFILE_DIR = FRPC_PROFILE_DIR / "connections"
 LOG_DIR = PROJECT_ROOT / "logs"
-RESOURCE_DIR = BUNDLE_ROOT / "resources"
-ICON_DIR = RESOURCE_DIR / "icons"
-APP_ICON_PATH = ICON_DIR / "easyfrp_app.ico"
-HEADER_LOGO_PATH = ICON_DIR / "easyfrp_header_logo_small.png"
-STATUS_ICON_PATH = ICON_DIR / "easyfrp_status_24.png"
-TRAY_ICON_PATH = ICON_DIR / "easyfrp_tray.ico"
 RUNTIME_DIR = PROJECT_ROOT / "runtime"
 
 
@@ -48,4 +42,3 @@ def ensure_runtime_directories() -> None:
         target_path = CONFIG_DIR / source_path.name
         if not target_path.exists():
             shutil.copy2(source_path, target_path)
-

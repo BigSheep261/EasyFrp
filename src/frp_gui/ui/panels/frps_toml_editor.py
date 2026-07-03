@@ -13,7 +13,6 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.backend.frps.config_service import FrpsConfigService
-from frp_gui.ui.theme import set_widget_state
 
 
 class FrpsTomlEditorPanel(QWidget):
@@ -119,12 +118,10 @@ class FrpsTomlEditorPanel(QWidget):
 
     def _show_info(self, message: str) -> None:
         """在面板和主窗口运行提示里显示普通提示。"""
-        set_widget_state(self.message_label, "info")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)
 
     def _show_error(self, message: str) -> None:
         """在面板和主窗口运行提示里显示错误提示。"""
-        set_widget_state(self.message_label, "error")
         self.message_label.setText(message)
         self.status_message_changed.emit(message)

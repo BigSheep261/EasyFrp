@@ -17,7 +17,7 @@ class SwitchButton(QCheckBox):
 
     这个类只处理两件事：
     1. 用户切换 checked 状态时，同步显示不同文案。
-    2. 提供一个统一样式，方便其他模块直接复用。
+    2. 提供一个统一交互，方便其他模块直接复用。
 
     注意：这个组件不知道 frpc 是什么，也不会调用 start_frpc()。
     具体业务应该由 panels 或 pages 层绑定。

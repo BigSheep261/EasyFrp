@@ -13,9 +13,7 @@ EasyFrp 旨在为 FRP 提供一个简洁、易用的 Windows 桌面管理界面�
 * 图形化配置管理
 * FRP 启动 / 停止 / 重启
 * 实时日志查看
-* Material Design 深色主题
 * 多配置文件管理（规划中）
-* 系统托盘支持（规划中）
 
 ---
 
@@ -28,10 +26,6 @@ EasyFrp
 ├── docs/
 ├── logs/
 ├── runtime/
-├── resources/
-│   ├── icons/
-│   └── qss/
-│
 └── src/
     └── frp_gui/
         ├── core/
@@ -46,7 +40,6 @@ EasyFrp
 
 * Python 3.12+
 * PyQt6
-* qt-material
 * tomlkit
 * Windows 10 / 11
 * FRP 0.6x+
@@ -96,7 +89,6 @@ dist/
 ### V1.1
 
 * [ ] 多配置文件支持
-* [ ] 系统托盘
 
 ### V1.2
 
@@ -135,18 +127,6 @@ License:
 Apache License 2.0
 
 EasyFrp 仅提供图形化管理功能，与 FRP 官方项目无直接关联。
-
-### qt-material
-
-Official Repository:
-
-https://github.com/UN-GCPDS/qt-material
-
-License:
-
-BSD 2-Clause License
-
-qt-material 用于为 PyQt6 界面提供 Material Design 主题。
 
 ### tomlkit
 
