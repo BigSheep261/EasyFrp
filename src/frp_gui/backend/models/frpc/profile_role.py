@@ -1,6 +1,6 @@
 """P2P profile role definitions."""
 
-from frp_gui.models.frpc.proxy_type import FrpcProxyRole
+from frp_gui.backend.models.frpc.proxy_type import FrpcProxyRole
 
 
 FrpcProfileRole = FrpcProxyRole

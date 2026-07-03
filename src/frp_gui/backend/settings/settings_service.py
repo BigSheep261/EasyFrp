@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from frp_gui.backend.shared.paths import CONFIG_DIR
+from frp_gui.utils.paths import CONFIG_DIR
 from frp_gui.utils import LocalFileUtils
 
 DEFAULT_EASYFRP_SETTINGS: dict[str, str | bool] = {

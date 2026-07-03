@@ -5,8 +5,8 @@ from pathlib import Path
 import re
 from typing import Any
 
-from frp_gui.backend.shared.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
-from frp_gui.models.frpc import (
+from frp_gui.utils.paths import FRPC_CONNECTION_PROFILE_DIR, FRPC_GLOBAL_PROFILE_DIR
+from frp_gui.backend.models.frpc import (
     FrpcGlobalConfig,
     FrpcProfileRole,
     FrpcProxyType,
@@ -110,4 +110,3 @@ class FrpcProfileService:
         if not isinstance(data, dict):
             raise ValueError("JSON 配置档案根节点必须是对象。")
         return data
-

@@ -1,4 +1,4 @@
-"""Shared application paths."""
+"""应用共用路径定义。"""
 
 from pathlib import Path
 import shutil
@@ -8,7 +8,7 @@ import sys
 def _application_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parents[4]
+    return Path(__file__).resolve().parents[3]
 
 
 def _bundle_root() -> Path:
@@ -31,7 +31,7 @@ RUNTIME_DIR = PROJECT_ROOT / "runtime"
 
 
 def ensure_runtime_directories() -> None:
-    """Create writable runtime directories and seed default config files."""
+    """创建可写运行目录，并补齐默认配置文件。"""
     for directory in (CONFIG_DIR, LOG_DIR, RUNTIME_DIR):
         directory.mkdir(parents=True, exist_ok=True)
     if BUNDLED_CONFIG_DIR == CONFIG_DIR or not BUNDLED_CONFIG_DIR.exists():

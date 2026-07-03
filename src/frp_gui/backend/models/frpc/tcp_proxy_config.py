@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from frp_gui.models.frpc.proxy_type import FrpcProxyType
+from frp_gui.backend.models.frpc.proxy_type import FrpcProxyType
 
 
 def _validate_port(value: int, field_name: str) -> None:

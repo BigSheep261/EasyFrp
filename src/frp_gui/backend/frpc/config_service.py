@@ -9,7 +9,7 @@ from pathlib import Path
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
-from frp_gui.backend.shared.paths import CONFIG_DIR
+from frp_gui.utils.paths import CONFIG_DIR
 from frp_gui.utils import LocalFileUtils
 
 
@@ -51,4 +51,3 @@ class FrpcConfigService:
 
         LocalFileUtils.write_text(self.config_path, text)
         return True, ""
-

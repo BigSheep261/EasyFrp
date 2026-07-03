@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 
-from frp_gui.backend.shared.paths import CONFIG_DIR, RUNTIME_DIR
+from frp_gui.utils.paths import CONFIG_DIR, RUNTIME_DIR
 
 
 class FrpsProcessState(Enum):
@@ -155,4 +155,3 @@ class FrpsProcessService(QObject):
 
 FrpsState = FrpsProcessState
 FrpsController = FrpsProcessService
-

@@ -5,7 +5,7 @@ from collections.abc import Sequence
 
 from PyQt6.QtWidgets import QApplication
 
-from frp_gui.backend.shared.paths import ensure_runtime_directories
+from frp_gui.utils.paths import ensure_runtime_directories
 from frp_gui.ui.main_window import MainWindow
 
 
