@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.backend.settings.settings_service import SettingsService
-from frp_gui.ui.pages.easyfrp_config_view import EasyfrpConfigView
+from frp_gui.ui.pages.setting_view import EasyfrpConfigView
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
 from frp_gui.ui.pages.frps_config_view import FrpsConfigView
