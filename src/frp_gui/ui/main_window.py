@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
 )
 
 from frp_gui.backend.settings.settings_service import SettingsService
+from frp_gui.ui.pages.dashboard import EasyFrpDashBoard
 from frp_gui.ui.pages.setting_view import EasyfrpConfigView
 from frp_gui.ui.pages.frpc_config_view import FrpcConfigView
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
@@ -35,11 +36,12 @@ MIN_WINDOW_WIDTH = 760
 MIN_WINDOW_HEIGHT = 520
 RESIZE_MARGIN = 8
 
-PAGE_FRPC_CONTROL = 0
-PAGE_FRPC_CONFIG = 1
-PAGE_FRPS_CONTROL = 2
-PAGE_FRPS_CONFIG = 3
-PAGE_SETTINGS = 4
+PAGE_DASHBOARD = 0
+PAGE_FRPC_CONTROL = 1
+PAGE_FRPC_CONFIG = 2
+PAGE_FRPS_CONTROL = 3
+PAGE_FRPS_CONFIG = 4
+PAGE_SETTINGS = 6
 
 
 class MainWindow(QMainWindow):
@@ -84,12 +86,15 @@ class MainWindow(QMainWindow):
         # 右侧页面容器：QStackedWidget 类似前端里的 router-view。
         # 它可以同时持有多个页面，但一次只显示其中一个。
 
+        self.easyfrp_dashboard_view = EasyFrpDashBoard(self)
         self.frpc_control_view = FrpcControlView(self)
         self.frpc_config_view = FrpcConfigView(self)
         self.frps_control_view = FrpsControlView(self)
         self.frps_config_view = FrpsConfigView(self)
         self.easyfrp_config_view = EasyfrpConfigView(self)
 
+
+        # 页面构建
         self._build_ui()
         self._install_window_event_filters()
         self._connect_signals()
@@ -149,19 +154,6 @@ class MainWindow(QMainWindow):
         self._resize_edges = set()
         self._update_resize_cursor(event.position().toPoint())
         super().mouseReleaseEvent(event)
-
-    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
-        """双击主界面顶部空白区域时切换最大化。"""
-        if (
-            event.button() == Qt.MouseButton.LeftButton
-            and self._is_window_drag_area(event.position().toPoint())
-            and not self._resize_edges_at_position(event.position().toPoint())
-        ):
-            self._toggle_maximized()
-            event.accept()
-            return
-
-        super().mouseDoubleClickEvent(event)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """让无边框窗口在子控件区域也能拖动和缩放。"""
@@ -266,6 +258,7 @@ class MainWindow(QMainWindow):
 
     def _build_pages(self) -> None:
         """把页面加入右侧页面容器。"""
+        self.page_stack.addWidget(self.easyfrp_dashboard_view)
         self.page_stack.addWidget(self.frpc_control_view)
         self.page_stack.addWidget(self.frpc_config_view)
         self.page_stack.addWidget(self.frps_control_view)
@@ -292,6 +285,9 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         """连接主窗口级别的信号。"""
         self.sidebar.currentRowChanged.connect(self._handle_sidebar_row_changed)
+        self.easyfrp_dashboard_view.status_message_changed.connect(
+            self._show_main_message
+        )
         self.frpc_control_view.status_message_changed.connect(
             self._show_main_message
         )
@@ -409,20 +405,18 @@ class MainWindow(QMainWindow):
         """按 frpc/frps 模式刷新侧边栏显示内容。"""
         self._client_mode = "frps" if client_mode == "frps" else "frpc"
         if selected_page is None:
-            selected_page = (
-                PAGE_FRPS_CONTROL
-                if self._client_mode == "frps"
-                else PAGE_FRPC_CONTROL
-            )
+            selected_page = PAGE_DASHBOARD
 
         if self._client_mode == "frps":
             items = [
+                ("DashBoard", PAGE_DASHBOARD),
                 ("frps 控制", PAGE_FRPS_CONTROL),
                 ("frps 配置", PAGE_FRPS_CONFIG),
                 ("设置", PAGE_SETTINGS),
             ]
         else:
             items = [
+                ("DashBoard", PAGE_DASHBOARD),
                 ("frpc 控制", PAGE_FRPC_CONTROL),
                 ("frpc 配置", PAGE_FRPC_CONFIG),
                 ("设置", PAGE_SETTINGS),
