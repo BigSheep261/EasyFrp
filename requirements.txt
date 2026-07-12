@@ -1,3 +1,6 @@
+# 提供 EasyFrp 桌面界面与 Qt 事件循环。
 PyQt6==6.11.0
+# 将 Python 项目打包为可独立运行的桌面程序。
 PyInstaller==6.21.0
+# 读取、修改并保留 TOML 配置文件的格式与注释。
 tomlkit==0.15.0

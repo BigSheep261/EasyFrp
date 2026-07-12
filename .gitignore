@@ -1,20 +1,26 @@
+# 忽略 Python 解释器生成的字节码缓存和编译产物。
 __pycache__/
 *.py[cod]
 *$py.class
 
+# 忽略各类本地虚拟环境及其解释器版本标记。
 .venv/
 venv/
 env/
 .python-version
 
+# 忽略不同编辑器保存的项目级个人配置。
 .idea/
 .vscode/
 
+# 忽略构建目录、发布目录和本地生成的 PyInstaller 规格文件。
 build/
 dist/
 *.spec
 
+# 忽略运行日志，但保留用于提交空目录的占位文件。
 logs/*
 !logs/.gitkeep
+# 忽略运行时二进制文件，但保留对应目录结构。
 runtime/*
 !runtime/.gitkeep

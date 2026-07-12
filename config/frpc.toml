@@ -1,12 +1,22 @@
+# 指定 frpc 要连接的服务端公网地址。
 serverAddr = "47.116.193.23"
+# 使用与 frps 监听配置一致的服务端端口。
 serverPort = 7000
 
+# 采用令牌方式验证客户端身份。
 auth.method = "token"
+# 提供与服务端约定的访问令牌。
 auth.token = "020601"
 
+# 声明一条 TCP 代理配置。
 [[proxies]]
+# 为该代理设置便于日志和管理界面识别的唯一名称。
 name = "test-tcp"
+# 使用 TCP 端口转发协议。
 type = "tcp"
+# 将流量转发到本机回环地址上的服务。
 localIP = "127.0.0.1"
+# 本地目标服务监听 SSH 默认端口。
 localPort = 22
+# 服务端通过此远程端口公开本地服务。
 remotePort = 25565

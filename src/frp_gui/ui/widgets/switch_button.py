@@ -4,6 +4,7 @@
 它只负责自己的显示效果和基础交互，不直接绑定 frpc/frps 之类的业务逻辑。
 """
 
+# Qt 的状态、鼠标形态与基础控件类型共同支撑可复用开关交互。
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QCheckBox, QWidget
 
@@ -36,20 +37,30 @@ class SwitchButton(QCheckBox):
             on_text: 选中时显示的文案，通常表示“可以停止”。
             parent: PyQt 的父组件。传入父组件后，Qt 会帮忙管理生命周期。
         """
+        # 先交由 QCheckBox 完成 Qt 控件及父子对象关系的初始化。
         super().__init__(parent)
+
+        # 保存两种状态对应的文案，后续切换时无需由外部重复传入。
         self._off_text = off_text
         self._on_text = on_text
 
         # 鼠标悬停时显示手型，暗示这是一个可以点击的控件。
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        # 预留足够宽度，避免状态文案切换时控件尺寸发生明显跳动。
         self.setMinimumWidth(144)
+
+        # 设置稳定的对象名，供应用样式表统一定制开关外观。
         self.setObjectName("switchButton")
 
         # QCheckBox 自带 toggled(bool) 信号。
         # 每次 checked 状态变化时，更新按钮旁边的文案。
         self.toggled.connect(self._update_text)
+
+        # 主动同步一次初始文本，确保首次显示时文案与默认状态一致。
         self._update_text(self.isChecked())
 
     def _update_text(self, checked: bool) -> None:
         """根据开关状态更新显示文案。"""
+        # 选中表示功能开启，因此显示可表达当前开启态的 on 文案。
         self.setText(self._on_text if checked else self._off_text)

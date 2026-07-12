@@ -1,7 +1,11 @@
+# 定义用于开发和打包 EasyFrp 的 Conda 环境名称。
 name: EasyFrp_Env
+# 优先从 Conda 官方默认频道解析底层运行库。
 channels:
   - defaults
+# 固定解释器、系统运行库和 Python 工具版本，保证构建结果可复现。
 dependencies:
+  # 以下条目提供 Python 解释器在 Windows 上运行所需的底层库。
   - bzip2=1.0.8
   - ca-certificates=2026.5.14
   - libexpat=2.8.1
@@ -22,13 +26,23 @@ dependencies:
   - wheel=0.46.3
   - xz=5.8.2
   - zlib=1.3.2
+  # 其余应用级依赖由当前环境内的 pip 安装。
   - pip:
+      # PyInstaller 的依赖图分析支持库。
       - altgraph==0.17.5
+      # 解析 Windows PE 文件，供 PyInstaller 收集二进制依赖。
       - pefile==2024.8.26
+      # 生成 EasyFrp 可执行分发包。
       - pyinstaller==6.21.0
+      # 提供第三方包对应的 PyInstaller 社区钩子。
       - pyinstaller-hooks-contrib==2026.6
+      # 提供桌面控件、信号槽和事件循环。
       - pyqt6==6.11.0
+      # 携带 PyQt6 对应的 Qt 原生运行库。
       - pyqt6-qt6==6.11.1
+      # 连接 Python 与 Qt 原生接口。
       - pyqt6-sip==13.11.1
+      # 让 PyInstaller 在非 Windows API 环境中处理相关类型。
       - pywin32-ctypes==0.2.3
+      # 解析和写回 frpc、frps 的 TOML 配置。
       - tomlkit==0.15.0
