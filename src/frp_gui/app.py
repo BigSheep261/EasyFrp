@@ -15,14 +15,7 @@ from frp_gui.ui.main_window import MainWindow
 
 
 def create_application(argv: Sequence[str] | None = None) -> QApplication:
-    """创建并配置 Qt 应用程序实例。
-
-    Args:
-        argv: 交给 Qt 解析的命令行参数；为 ``None`` 时使用当前进程参数。
-
-    Returns:
-        已设置应用名称和组织名称的 Qt 全局应用对象。
-    """
+    """创建并配置 Qt 应用程序实例。"""
     # 复制外部参数以避免 Qt 修改调用方持有的可变序列。
     arguments = list(argv) if argv is not None else sys.argv
     # 创建进程级唯一的 Qt 应用对象，并让 Qt 处理平台相关参数。
@@ -36,14 +29,7 @@ def create_application(argv: Sequence[str] | None = None) -> QApplication:
 
 
 def run(argv: Sequence[str] | None = None) -> int:
-    """初始化运行环境并启动桌面应用程序的事件循环。
-
-    Args:
-        argv: 可选的 Qt 命令行参数；省略时沿用当前进程参数。
-
-    Returns:
-        Qt 事件循环结束时给出的进程退出码。
-    """
+    """初始化运行环境并启动桌面应用程序的事件循环。"""
     # 先创建日志、配置和运行时目录，避免界面加载服务时访问缺失路径。
     ensure_runtime_directories()
     # 构建全局 Qt 应用对象，后续所有控件都依附于该实例。
