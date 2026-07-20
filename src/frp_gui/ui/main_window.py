@@ -37,16 +37,27 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle("EasyFrp")
+        # 主界面设定
+        self.setWindowTitle("EasyFrp")  # 标题
         self.setWindowFlag(Qt.WindowType.WindowMaximizeButtonHint, False)
-        self.setFixedSize(960, 640)
+        self.setFixedSize(960, 640)  # 窗口大小
 
+        # 左侧列表控件
         self.sidebar = QListWidget(self)
         self.sidebar.setObjectName("sidebarNavigation")
         self.sidebar.setFixedWidth(180)
 
+        # 右侧页面堆栈
         self.page_stack = QStackedWidget(self)
         self.page_stack.setObjectName("pageStack")
+
+        # 初始化
+        self._register_page() # 注册页面
+        self._build_ui() # 创建UI
+        self._connect_signals() # 连接信号
+        self._apply_startup_settings() 
+
+    def _register_page(self) -> None:
 
         self.easyfrp_dashboard_view = EasyFrpDashBoard(self)
         self.frpc_control_view = FrpcControlView(self)
@@ -65,10 +76,6 @@ class MainWindow(QMainWindow):
 
         self._sidebar_page_routes: list[int] = []
         self._client_mode = "frpc"
-
-        self._build_ui()
-        self._connect_signals()
-        self._apply_startup_settings()
 
     def _build_ui(self) -> None:
         central_widget = QWidget(self)
