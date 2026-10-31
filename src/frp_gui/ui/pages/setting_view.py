@@ -75,17 +75,15 @@ class EasyfrpConfigView(QWidget):
             parent=self,
         )
 
-        # 行内消息在表单附近即时反馈读取、重置或保存结果。
+        # 行内消息在表单附近即时反馈读取或保存结果。
         self.message_label = QLabel("", self)
         self.message_label.setObjectName("inlineMessage")
         self.message_label.setWordWrap(True)
 
-        # 重置仅修改当前表单，应用按钮才负责将选项写入配置文件。
-        self.reset_button = QPushButton("重置", self)
+        # 应用按钮负责将当前表单选项写入配置文件。
         self.apply_button = QPushButton("应用设置", self)
 
-        # 通过稳定对象名区分次要与主要操作的视觉样式。
-        self.reset_button.setObjectName("secondaryButton")
+        # 通过稳定对象名应用主要操作的视觉样式。
         self.apply_button.setObjectName("primaryButton")
 
         # 先建立界面，再加载数据，最后连接用户操作信号。
@@ -131,7 +129,6 @@ class EasyfrpConfigView(QWidget):
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(10)
         button_layout.addStretch()
-        button_layout.addWidget(self.reset_button)
         button_layout.addWidget(self.apply_button)
 
         # 把表单和操作区装入同一个卡片表面。
@@ -147,9 +144,6 @@ class EasyfrpConfigView(QWidget):
 
     def _connect_signals(self) -> None:
         """把表单操作按钮连接到对应的页面处理方法。"""
-        # 重置按钮只恢复表单显示，避免误触时立即覆盖配置文件。
-        self.reset_button.clicked.connect(self._reset_form)
-
         # 应用按钮收集当前表单值并执行持久化。
         self.apply_button.clicked.connect(self._apply_settings)
 
@@ -171,14 +165,6 @@ class EasyfrpConfigView(QWidget):
         # 成功读取后同步可见表单与缓存，作为后续编辑的基准状态。
         self._apply_settings_to_form(settings)
         self.current_settings = settings
-
-    def _reset_form(self) -> None:
-        """把表单恢复为默认设置，但暂不写入配置文件。"""
-        # 仅更新控件值，保留用户确认后再应用的交互语义。
-        self._apply_settings_to_form(self.config_service.default_settings())
-
-        # 提醒用户还需点击应用，避免把表单重置误解为已经保存。
-        self._show_info("EasyFrp 设置已重置为默认值，点击应用后生效")
 
     def _apply_settings(self) -> None:
         """收集并保存当前表单设置，成功后广播最新配置。"""

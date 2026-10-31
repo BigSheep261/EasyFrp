@@ -17,7 +17,6 @@ EasyFrp 是一个基于 Python 和 PyQt6 开发的 Windows 桌面工具，用于
 | frps TOML 编辑 | 已实现，支持读取、编辑、语法校验和保存 |
 | frpc 连接卡片 | 已实现，从 frpc.toml 的 proxies 条目读取并展示连接摘要 |
 | frpc 添加、编辑、删除配置 | 尚未接通，当前“添加配置”按钮仅显示说明 |
-| frpc JSON 配置档案 | 已有模型及读写服务，尚未接入完整的界面与启动流程 |
 | 应用启动后自动运行 FRP | 已实现，按当前模式提交启动请求 |
 | 开机自启动 | 仅保存设置，尚未实现系统启动项注册 |
 | Dashboard | 当前为占位页面，尚未接入运行指标 |
@@ -65,6 +64,8 @@ FRP 二进制文件不随 Git 仓库提供。只使用客户端或服务端时�
 
 ### 3. 准备配置
 
+首次启动 EasyFrp 时会自动创建缺失的 `config/frpc.toml` 和 `config/frps.toml` 空文件，并根据代码内置模板生成缺失的 `config/config.json`；已有文件不会被启动初始化覆盖。首次启动后，请按需填写 TOML 配置，再启动对应的 FRP 进程。
+
 - **frpc 模式**：启动前编辑 `config/frpc.toml`，填写服务器地址、端口、认证与代理配置。当前 frpc 配置页主要用于查看连接卡片。
 - **frps 模式**：编辑 `config/frps.toml`；也可以启动界面后切换到 frps 模式，在配置页编辑并保存。
 - **应用设置**：保存在 `config/config.json`，可在设置页切换模式并控制自动运行选项。
@@ -88,12 +89,10 @@ TOML 编辑器校验的是文件语法，不能保证 FRP 字段、网络连接�
 | `config/config.json` | 应用模式、开机自启动偏好、自动运行偏好 |
 | `config/frpc.toml` | frpc 实际启动时读取的配置 |
 | `config/frps.toml` | frps 实际启动时读取的配置 |
-| `data/profile/frpc/global/` | frpc 全局 JSON 档案，包含服务器、认证、日志等配置 |
-| `data/profile/frpc/connections/` | frpc 连接 JSON 档案，支持 TCP、UDP、XTCP 被访问端与访问端 |
 | `runtime/` | FRP 可执行文件 |
 | `logs/` | 预留日志目录，实际日志输出位置由 FRP 配置决定 |
 
-JSON 档案目前由后端服务负责保存、读取和枚举，尚未自动组合生成启动用的 TOML。修改档案不会直接改变当前使用的 `config/frpc.toml`。
+frpc 当前直接使用 `config/frpc.toml`，配置页从该文件读取连接摘要。
 
 ## 项目结构
 
@@ -102,7 +101,6 @@ EasyFrp/
 ├── main.py                     # 程序入口，注册 src 模块搜索路径
 ├── requirements.txt            # Python 依赖
 ├── config/                     # 应用设置与 FRP TOML 配置
-├── data/profile/frpc/          # JSON 配置档案，按需创建
 ├── docs/                       # 学习路线、PyQt6 教材及示例
 ├── miniconda_env/              # Conda 环境说明与环境文件
 ├── logs/                       # 预留日志目录
@@ -110,9 +108,8 @@ EasyFrp/
 └── src/frp_gui/
     ├── app.py                  # 应用初始化与事件循环
     ├── backend/
-    │   ├── frpc/               # 客户端配置、档案与进程服务
+    │   ├── frpc/               # 客户端配置与进程服务
     │   ├── frps/               # 服务端配置与进程服务
-    │   ├── models/frpc/        # 结构化配置模型与校验
     │   └── settings/           # 应用设置读写与默认值
     ├── ui/
     │   ├── main_window.py      # 主窗口、导航与退出清理
@@ -122,17 +119,17 @@ EasyFrp/
     └── utils/                  # 路径定义与文件读写工具
 ```
 
-界面通过 Qt 信号接收进程状态、输出和错误。进程控制使用 QProcess，配置读写与数据模型位于 backend，页面与功能面板位于 ui。
+界面通过 Qt 信号接收进程状态、输出和错误。进程控制使用 QProcess，配置读写与校验位于 backend，页面与功能面板位于 ui。
 
 ## 打包发布
 
 在已安装依赖的 Windows 环境中，可使用以下命令作为单文件打包的起点：
 
 ```powershell
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name EasyFrp --paths src --add-data "config:config" main.py
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name EasyFrp --paths src main.py
 ```
 
-该命令将当前 `config/` 作为内置默认配置打包；发布前应检查其中的服务器地址和认证信息。`--paths src` 用于让打包器发现源码包。
+配置文件在运行时创建，无需将当前 `config/` 打入程序包。`--paths src` 用于让打包器发现源码包。
 
 输出程序为 `dist/EasyFrp.exe`。FRP 可执行文件需要另行放到它旁边的 `runtime/` 目录：
 
@@ -142,17 +139,17 @@ dist/
 ├── runtime/
 │   ├── frpc.exe
 │   └── frps.exe
-└── config/                     # 首次启动时补齐缺失的内置配置
+└── config/                     # 首次启动时创建空 TOML 和默认应用设置
 ```
 
-程序启动时会创建配置、日志和运行目录；打包模式下还会复制缺失的内置配置，不覆盖已经存在的文件。请选择可写目录存放程序，以便保存设置、配置和档案。
+程序启动时会创建配置、日志和运行目录，补齐缺失的空 TOML 文件，并用代码内置模板初始化缺失的应用设置文件。源码与打包运行使用相同的初始化逻辑，不覆盖已经存在的文件。请选择可写目录存放程序，以便保存设置和配置。
 
-此处给出的是打包方式说明，发布前仍需在目标 Windows 环境验证程序启动、资源部署、FRP 启停和退出清理。
+此处给出的是打包方式说明，发布前仍需在目标 Windows 环境验证程序启动、配置初始化、FRP 启停和退出清理。
 
 ## 后续开发方向
 
 - 完成 frpc 配置的新增、编辑、删除与导入流程。
-- 接通全局档案、连接档案选择及 TOML 生成，实现多配置管理与启动。
+- 实现多份 TOML 配置的选择、管理与启动。
 - 实现开机自启动设置对应的系统操作。
 - 为 Dashboard 接入连接状态、流量和在线时长等信息。
 - 完善日志管理、打包发布与自动化测试。

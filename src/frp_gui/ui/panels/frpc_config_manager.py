@@ -406,12 +406,12 @@ class FrpcConfigManagerPanel(QWidget):
             self.cards_layout.setColumnStretch(column, 1)
 
     def _handle_add_clicked(self) -> None:
-        """提示用户新增配置流程尚待确定，并同步展示说明消息。"""
+        """提示用户新增配置尚未实现，并说明当前配置方式。"""
         # 使用同一段说明文本，确保行内提示与弹窗内容完全一致。
-        message = "添加配置流程尚未确定：请确认是新建表单、导入 JSON 档案，还是直接编辑 frpc.toml。"
+        message = "添加配置功能尚未实现，请直接编辑 config/frpc.toml。"
         self._show_info(message)
         # 弹窗使当前尚不可执行的操作得到即时、明确反馈。
-        QMessageBox.information(self, "需要确认", message)
+        QMessageBox.information(self, "配置提示", message)
 
     def _show_info(self, message: str) -> None:
         """在面板内显示普通提示，并将相同内容广播给外层界面。"""
