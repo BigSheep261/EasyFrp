@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QMainWindow
 
 from frp_gui.ui.pages.frpc_control_view import FrpcControlView
 from frp_gui.ui.pages.frps_control_view import FrpsControlView
-from frp_gui.ui.pages.weights.main_tab import EasyFrpTabWidget
+from frp_gui.ui.weights.main_tab import EasyFrpTabWidget
 
 
 class MainWindow(QMainWindow):
