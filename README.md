@@ -1,40 +1,29 @@
 # EasyFrp
 
-A Windows desktop manager for FRP, built with Python and PyQt6.
+A Windows desktop controller for FRP, built with Python and PyQt6.
 
-EasyFrp 是一个基于 Python 和 PyQt6 开发的 Windows 桌面工具，用于管理 FRP 客户端（frpc）与服务端（frps）的配置、进程启停和实时输出。
-
-项目目前处于开发阶段，已接通基础进程控制和部分配置功能。frpc 的表单化配置、多配置选择与组合启动仍在完善，当前使用时还需要准备 TOML 配置文件。实际隧道通信由独立的 FRP 可执行文件完成。
+EasyFrp 仅提供 frpc 客户端和 frps 服务端的手动进程控制。两个控制页始终可从侧边栏进入，各自展示进程状态并提供启停按钮。实际隧道通信由独立的 FRP 可执行文件完成。
 
 ## 当前功能
 
-| 功能 | 当前状态 |
-| --- | --- |
-| frpc / frps 模式切换 | 已实现，保存设置后更新对应的侧边导航 |
-| frpc / frps 启动、停止 | 已实现，使用 QProcess 异步管理子进程 |
-| 进程状态与实时输出 | 已实现，展示启动、运行、停止状态及标准输出、错误输出 |
-| 退出清理 | 已实现，关闭应用时终止受管的 FRP 子进程 |
-| frps TOML 编辑 | 已实现，支持读取、编辑、语法校验和保存 |
-| frpc 连接卡片 | 已实现，从 frpc.toml 的 proxies 条目读取并展示连接摘要 |
-| frpc 添加、编辑、删除配置 | 尚未接通，当前“添加配置”按钮仅显示说明 |
-| 应用启动后自动运行 FRP | 已实现，按当前模式提交启动请求 |
-| 开机自启动 | 仅保存设置，尚未实现系统启动项注册 |
-| Dashboard | 当前为占位页面，尚未接入运行指标 |
+- 手动启动、停止 frpc 和 frps。
+- 展示未运行、启动中、运行中和停止中状态。
+- 在状态栏提示启动失败、异常退出等进程错误。
+- 关闭主窗口时停止应用管理的 FRP 进程。
 
-界面中的“运行中”表示 FRP 子进程已经启动，不代表服务器连接成功或隧道已经可用。当前实时输出显示在界面中，EasyFrp 没有自动将这些输出保存到日志文件；FRP 自身的日志行为由 TOML 配置决定。
+界面中的“运行中”表示 FRP 子进程已经启动，不代表服务器连接成功或隧道已经可用。EasyFrp 不编辑或校验 TOML 配置，也不自动启动 FRP；配置需要使用外部编辑器准备。应用不采集、展示或保存进程输出，`logs/` 文件夹保留。FRP 自身的文件日志仍由 TOML 配置决定。
 
 ## 环境要求
 
 - Windows 10 / 11。
-- 推荐使用 Python 3.12 或更新版本；仓库现有 Conda 环境文件使用 Python 3.11，详见 [Conda 环境说明](miniconda_env/miniconda_init.md)。
-- 支持 TOML 配置的 Windows 版 FRP，配置字段应与所用 FRP 版本匹配。
+- 推荐使用 Python 3.12 或更新版本；也可以参考 [Conda 环境说明](miniconda_env/miniconda_init.md)。
+- 支持 TOML 配置的 Windows 版 FRP，配置字段应与 FRP 版本匹配。
 
-Python 依赖固定在 [requirements.txt](requirements.txt)：
+Python 依赖见 [requirements.txt](requirements.txt)：
 
 | 依赖 | 版本 | 用途 |
 | --- | --- | --- |
-| PyQt6 | 6.11.0 | 桌面界面与 Qt 事件循环 |
-| tomlkit | 0.15.0 | TOML 配置解析与语法校验 |
+| PyQt6 | 6.11.0 | 桌面界面、Qt 事件循环和异步进程控制 |
 | PyInstaller | 6.21.0 | 打包 Windows 可执行程序 |
 
 ## 快速开始
@@ -48,137 +37,98 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-也可以按照 [Conda 环境说明](miniconda_env/miniconda_init.md) 准备独立环境，或参考 [environment.yml](miniconda_env/environment.yml)。
+也可以参考 [environment.yml](miniconda_env/environment.yml) 准备 Conda 环境。
 
-### 2. 准备 FRP 程序
+### 2. 准备 FRP 程序和配置
 
-从 [FRP 官方 Releases](https://github.com/fatedier/frp/releases) 下载与系统架构匹配的 Windows 版本，将需要使用的程序放到：
+从 [FRP 官方 Releases](https://github.com/fatedier/frp/releases) 下载匹配系统架构的 Windows 版本，将程序和配置放到：
 
 ```text
 runtime/
 ├── frpc.exe
 └── frps.exe
+config/
+├── frpc.toml
+└── frps.toml
 ```
 
-FRP 二进制文件不随 Git 仓库提供。只使用客户端或服务端时，只需准备对应的可执行文件。
+FRP 可执行文件不随 Git 仓库提供。只使用其中一个控制页时，只需准备对应的程序和配置。
 
-### 3. 准备配置
+首次启动 EasyFrp 会创建缺失的运行目录和空 TOML 文件，已有文件不会被覆盖。请用外部编辑器填写配置后，再在控制页点击启动按钮。空文件只用于占位，不表示 FRP 已配置完成。
 
-首次启动 EasyFrp 时会自动创建缺失的 `config/frpc.toml` 和 `config/frps.toml` 空文件，并根据代码内置模板生成缺失的 `config/config.json`；已有文件不会被启动初始化覆盖。首次启动后，请按需填写 TOML 配置，再启动对应的 FRP 进程。
-
-- **frpc 模式**：启动前编辑 `config/frpc.toml`，填写服务器地址、端口、认证与代理配置。当前 frpc 配置页主要用于查看连接卡片。
-- **frps 模式**：编辑 `config/frps.toml`；也可以启动界面后切换到 frps 模式，在配置页编辑并保存。
-- **应用设置**：保存在 `config/config.json`，可在设置页切换模式并控制自动运行选项。
-
-TOML 编辑器校验的是文件语法，不能保证 FRP 字段、网络连接或端口配置有效。修改运行中的 FRP 配置后，需要停止并重新启动对应进程，使其重新读取配置。
-
-### 4. 启动界面
+### 3. 启动并手动控制
 
 ```powershell
 .\.venv\Scripts\python.exe main.py
 ```
 
-在设置页选择 `frpc 客户端` 或 `frps 服务端`，点击“应用设置”，再进入对应控制页启停进程并查看输出。启用“自动运行”后，下次打开 EasyFrp 时会自动尝试启动当前模式对应的 FRP 程序。
+在侧边栏选择“frpc 控制”或“frps 控制”，点击“启动 frpc”或“启动 frps”。进程启动后，按钮变为停止入口。修改运行中的 TOML 配置后，需要停止并重新启动对应进程。
 
-## 配置与数据目录
+两个页面的进程独立管理；切换页面不会停止已启动的进程。
 
-源码运行时，以下路径均相对于项目根目录；打包运行时，相对于 EasyFrp 可执行文件所在目录。
+## 路径约定
+
+源码运行时，路径相对于项目根目录；打包运行时，相对于 EasyFrp 可执行文件所在目录。
 
 | 路径 | 用途 |
 | --- | --- |
-| `config/config.json` | 应用模式、开机自启动偏好、自动运行偏好 |
-| `config/frpc.toml` | frpc 实际启动时读取的配置 |
-| `config/frps.toml` | frps 实际启动时读取的配置 |
-| `runtime/` | FRP 可执行文件 |
-| `logs/` | 预留日志目录，实际日志输出位置由 FRP 配置决定 |
+| `runtime/frpc.exe` | frpc 可执行文件 |
+| `runtime/frps.exe` | frps 可执行文件 |
+| `config/frpc.toml` | 通过 `-c` 参数交给 frpc 的配置文件 |
+| `config/frps.toml` | 通过 `-c` 参数交给 frps 的配置文件 |
+| `logs/` | 保留的预留目录，应用不向其中写入日志 |
 
-frpc 当前直接使用 `config/frpc.toml`，配置页从该文件读取连接摘要。
+FRP 子进程的工作目录设为对应可执行文件所在目录，因此 TOML 中的相对路径应按该目录理解。
 
 ## 项目结构
 
 ```text
-EasyFrp/
-├── main.py                     # 程序入口，注册 src 模块搜索路径
-├── requirements.txt            # Python 依赖
-├── config/                     # 应用设置与 FRP TOML 配置
-├── docs/                       # 学习路线、PyQt6 教材及示例
-├── miniconda_env/              # Conda 环境说明与环境文件
-├── logs/                       # 预留日志目录
-├── runtime/                    # frpc.exe、frps.exe
-└── src/frp_gui/
-    ├── app.py                  # 应用初始化与事件循环
-    ├── backend/
-    │   ├── frpc/               # 客户端配置与进程服务
-    │   ├── frps/               # 服务端配置与进程服务
-    │   └── settings/           # 应用设置读写与默认值
-    ├── ui/
-    │   ├── main_window.py      # 主窗口、导航与退出清理
-    │   ├── pages/              # Dashboard、控制页、配置页、设置页
-    │   ├── panels/             # 进程控制、配置卡片与 TOML 编辑面板
-    │   └── widgets/            # 可复用控件
-    └── utils/                  # 路径定义与文件读写工具
+src/frp_gui/
+├── app.py                       # 初始化运行目录与 Qt 应用
+├── backend/
+│   ├── frpc/process_service.py   # frpc 进程生命周期、状态和错误提示
+│   └── frps/process_service.py   # frps 进程生命周期、状态和错误提示
+├── ui/
+│   ├── main_window.py           # 两个固定控制入口、状态栏和退出清理
+│   └── pages/
+│       ├── frpc_control_view.py # 客户端手动控制和状态展示
+│       └── frps_control_view.py # 服务端手动控制和状态展示
+└── utils/paths.py               # 应用路径与空 TOML 初始化
 ```
 
-界面通过 Qt 信号接收进程状态、输出和错误。进程控制使用 QProcess，配置读写与校验位于 backend，页面与功能面板位于 ui。
+页面直接组织 Qt 原生控件，通过后端服务操作进程。QProcess 的状态和错误信号驱动界面更新；标准输出和标准错误直接丢弃。
+
+## 验证
+
+```powershell
+python -B -m unittest discover -s tests -v
+```
+
+测试使用离屏 Qt 界面与临时目录，验证手动按钮、进程状态与错误信号、路径检查、页面切换和退出清理，并验证输出丢弃与日志目录保留。输出测试仅使用本地 Python 子进程，不启动真实 FRP 网络连接。
 
 ## 打包发布
-
-在已安装依赖的 Windows 环境中，可使用以下命令作为单文件打包的起点：
 
 ```powershell
 .\.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name EasyFrp --paths src main.py
 ```
 
-配置文件在运行时创建，无需将当前 `config/` 打入程序包。`--paths src` 用于让打包器发现源码包。
+输出程序为 `dist/EasyFrp.exe`。无需打包内置配置资源；将 FRP 可执行文件放到它旁边的 `runtime/` 目录，并准备 `config/` 下的 TOML 配置。请选择可写目录存放程序。
 
-输出程序为 `dist/EasyFrp.exe`。FRP 可执行文件需要另行放到它旁边的 `runtime/` 目录：
-
-```text
-dist/
-├── EasyFrp.exe
-├── runtime/
-│   ├── frpc.exe
-│   └── frps.exe
-└── config/                     # 首次启动时创建空 TOML 和默认应用设置
-```
-
-程序启动时会创建配置、日志和运行目录，补齐缺失的空 TOML 文件，并用代码内置模板初始化缺失的应用设置文件。源码与打包运行使用相同的初始化逻辑，不覆盖已经存在的文件。请选择可写目录存放程序，以便保存设置和配置。
-
-此处给出的是打包方式说明，发布前仍需在目标 Windows 环境验证程序启动、配置初始化、FRP 启停和退出清理。
-
-## 后续开发方向
-
-- 完成 frpc 配置的新增、编辑、删除与导入流程。
-- 实现多份 TOML 配置的选择、管理与启动。
-- 实现开机自启动设置对应的系统操作。
-- 为 Dashboard 接入连接状态、流量和在线时长等信息。
-- 完善日志管理、打包发布与自动化测试。
-- 自动重连策略、定时启动与插件机制待进一步设计。
+发布前仍需在目标 Windows 环境验证程序启动、FRP 手动启停、状态提示和退出清理。
 
 ## 学习文档
 
 - [学习路线](docs/学习路线.md)
-- [PyQt6 模块详解与实战指南](docs/pyqt6-modules-guide/PyQt6模块详解与实战指南.md)
+- [PyQt6 模块详解与实战指南](docs/PyQt6模块详解与实战指南.md)
 - [PyQt6 教材阅读地图](docs/Book/00_阅读地图与学习方法.md)
 - [从教材走进 EasyFrp 源码](docs/Book/26_从教材走进EasyFrp源码.md)
 
-## 第三方组件
+## 第三方组件与许可证
 
-- [FRP](https://github.com/fatedier/frp)：实际的内网穿透与转发程序，采用 Apache License 2.0。EasyFrp 仅提供图形化管理功能，与 FRP 官方项目无直接关联。
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/)：Python 的 Qt 绑定，用于构建桌面界面。
-- [tomlkit](https://github.com/python-poetry/tomlkit)：TOML 解析与读写库，采用 MIT License。
-- [PyInstaller](https://pyinstaller.org/)：将 Python 应用打包为独立程序的工具。
+- [FRP](https://github.com/fatedier/frp)：实际的内网穿透与转发程序，采用 Apache License 2.0。EasyFrp 仅提供图形化进程控制，与 FRP 官方项目无直接关联。
+- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/)：桌面界面与 Qt 绑定。
+- [PyInstaller](https://pyinstaller.org/)：将 Python 应用打包为独立程序。
 
-## 贡献指南
-
-欢迎提交 Bug Report、Feature Request 和 Pull Request。提交 Issue 前请先搜索已有问题，并提供：
-
-- Windows、Python、FRP 版本及运行方式（源码或打包程序）。
-- 复现步骤、预期行为和实际结果。
-- 相关错误输出，以及移除 token、secretKey 等认证信息后的必要配置片段。
-
-## License
-
-本项目采用 [Apache License 2.0](LICENSE)。第三方组件遵循各自的许可证。
+本项目采用 [Apache License 2.0](LICENSE)。第三方组件遵循各自许可证。
 
 Copyright (c) 2026 大羊

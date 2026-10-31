@@ -30,8 +30,6 @@ class FrpcProcessService(QObject):
 
     # 状态信号以枚举字符串值通知 UI/ViewModel 更新控件。
     state_changed = pyqtSignal(str)
-    # 输出信号统一承载 frpc 的标准输出、标准错误和生命周期提示。
-    output_received = pyqtSignal(str)
     # 错误信号向上层报告启动检查或 QProcess 运行错误。
     error_occurred = pyqtSignal(str)
 
@@ -53,11 +51,10 @@ class FrpcProcessService(QObject):
         # 将 QProcess 挂到当前 QObject 下，确保服务销毁时资源一并释放。
         self._process = QProcess(self)
 
-        # QProcess 是异步的：启动、退出、输出和错误都通过信号回调处理，
-        # 这样不会阻塞 Qt 主线程，也不会让窗口在 frpc 运行时卡住。
-        self._process.readyReadStandardOutput.connect(self._read_stdout)
-        self._process.readyReadStandardError.connect(self._read_stderr)
-        # 生命周期信号分别驱动启动确认、退出分类和错误翻译逻辑。
+        # 不采集或保存进程输出，直接丢弃，避免未消费的输出占用内存。
+        self._process.setStandardOutputFile(QProcess.nullDevice())
+        self._process.setStandardErrorFile(QProcess.nullDevice())
+        # 仅监听进程生命周期和错误，供界面更新状态。
         self._process.started.connect(self._handle_started)
         self._process.finished.connect(self._handle_finished)
         self._process.errorOccurred.connect(self._handle_error)
@@ -147,24 +144,6 @@ class FrpcProcessService(QObject):
         self._state = state
         self.state_changed.emit(state.value)
 
-    def _read_stdout(self) -> None:
-        """读取当前全部标准输出，并交给统一解码与发送逻辑。"""
-        # QProcess 返回 QByteArray 兼容对象，统一由输出函数转换为文本。
-        self._emit_process_output(self._process.readAllStandardOutput())
-
-    def _read_stderr(self) -> None:
-        """读取当前全部标准错误，并交给统一解码与发送逻辑。"""
-        # 标准错误与标准输出采用相同的日志展示通道。
-        self._emit_process_output(self._process.readAllStandardError())
-
-    def _emit_process_output(self, data: bytes) -> None:
-        """将进程字节输出安全解码、清理后通过日志信号发送。"""
-        # frpc 输出通常是 UTF-8；errors="replace" 可以避免异常字节导致日志显示崩溃。
-        text = bytes(data).decode("utf-8", errors="replace").strip()
-        # 忽略空白输出，避免界面日志出现无意义空行。
-        if text:
-            self.output_received.emit(text)
-
     def _handle_started(self) -> None:
         """响应 QProcess 启动成功信号，将服务状态切换为运行中。"""
         # started 信号表明操作系统已成功创建子进程。
@@ -175,21 +154,14 @@ class FrpcProcessService(QObject):
         exit_code: int,
         exit_status: QProcess.ExitStatus,
     ) -> None:
-        """根据退出状态和停止意图分类通知，并将服务恢复为已停止。"""
-        # 主动停止时，Qt 有时也会把强制结束报告成 CrashExit。
-        # 这种情况对用户来说是“已停止”，不应该显示成异常崩溃。
+        """进程结束后恢复停止状态，异常退出通过错误提示反馈。"""
         was_stopping = self._state == FrpcProcessState.STOPPING
-        # 非主动停止的 CrashExit 才属于需要展示的异常退出。
-        if exit_status == QProcess.ExitStatus.CrashExit and not was_stopping:
-            self.error_occurred.emit(f"frpc 异常退出，退出码：{exit_code}")
-        # 主动停止不论正常退出还是被 kill，都统一报告为已停止。
-        elif was_stopping:
-            self.output_received.emit("frpc 已停止。")
-        # 其余情况属于子进程自行正常退出，保留退出码供用户判断。
-        else:
-            self.output_received.emit(f"frpc 已退出，退出码：{exit_code}")
-        # 所有 finished 分支最终都清除运行状态并通知界面。
         self._set_state(FrpcProcessState.STOPPED)
+        # 主动停止不报告崩溃；其他非零退出也应保留可见的失败提示。
+        if not was_stopping and (
+            exit_status == QProcess.ExitStatus.CrashExit or exit_code != 0
+        ):
+            self.error_occurred.emit(f"frpc 异常退出，退出码：{exit_code}")
 
     def _handle_error(self, error: QProcess.ProcessError) -> None:
         """将 QProcess 错误枚举转换为中文业务消息并修正终止状态。"""
@@ -206,14 +178,14 @@ class FrpcProcessService(QObject):
             QProcess.ProcessError.ReadError: "读取 frpc 进程输出失败。",
             QProcess.ProcessError.UnknownError: "frpc 发生未知进程错误。",
         }
-        # 未命中的未来枚举值回退为包含枚举名称的通用错误消息。
-        self.error_occurred.emit(messages.get(error, f"frpc 进程错误：{error.name}"))
         # 启动失败或崩溃意味着进程已不可继续运行，需要同步清除服务状态。
         if error in {
             QProcess.ProcessError.FailedToStart,
             QProcess.ProcessError.Crashed,
         }:
             self._set_state(FrpcProcessState.STOPPED)
+        # 状态更新完成后再发出错误，避免提示被“未运行”覆盖。
+        self.error_occurred.emit(messages.get(error, f"frpc 进程错误：{error.name}"))
 
     def _kill_if_still_running(self) -> None:
         """在温和终止超时后，仅对仍处于停止流程的活动进程执行强制结束。"""
