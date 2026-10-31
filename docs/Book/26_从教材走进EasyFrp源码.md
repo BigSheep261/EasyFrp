@@ -14,11 +14,13 @@
 
 ## 26.2 主窗口负责把页面组合起来
 
-[MainWindow](../../src/frp_gui/ui/main_window.py) 使用侧边 `QListWidget` 和右侧 `QStackedWidget`。沿 `__init__()` 中创建控件、装配布局、连接信号的顺序阅读，再看 `closeEvent()` 的退出清理。
+[MainWindow](../../src/frp_gui/ui/main_window.py) 使用 `QTabWidget` 承载两个控制页，并将 `tabPosition` 设置为 `West`，使标签显示在左侧。沿 `__init__()` 中创建容器、添加页面的顺序阅读，再看 `closeEvent()` 的退出清理。
+
+同一文件中的 `HorizontalTabBar` 通过 `tabSizeHint()` 调整标签尺寸，再用 `QStylePainter` 分别绘制原生侧边背景和横向文字。它只改变标签显示，点击、键盘导航和页面切换仍由 Qt 管理。
 
 构造方法创建 frpc、frps 两个固定控制页。两种控制入口同时可见，无需读取模式设置，页面在整个主窗口生命周期内持续存在。
 
-侧边栏行号与页面堆栈索引直接对应，因此可以将 `currentRowChanged` 连接到 `setCurrentIndex`。页面切换只改变可见内容，不启动或停止 FRP 进程。
+`addTab(页面, 标签文字)` 同时登记页面和入口，Qt 自动处理标签切换，无需单独维护导航列表与页面堆栈的信号连接。页面切换只改变可见内容，不启动或停止 FRP 进程。
 
 项目当前主窗采用固定尺寸。这是当前实现的取舍，不是所有 Qt 项目必须固定窗口。复习第 06 和 14 章后，可以单独在练习项目里比较固定尺寸与响应布局对字体放大和长文本的影响。
 
@@ -30,7 +32,7 @@
 |---|---|
 | [控制页面](../../src/frp_gui/ui/pages/frpc_control_view.py) | 页面如何使用可选中的 QPushButton 手动启停进程、禁用按钮并显示状态 |
 | [进程服务](../../src/frp_gui/backend/frpc/process_service.py) | QProcess 如何启动、丢弃输出、报告失败与结束 |
-| [主窗口](../../src/frp_gui/ui/main_window.py) | 收到消息后如何显示公共状态 |
+| [主窗口](../../src/frp_gui/ui/main_window.py) | 如何切换两个控制页并在退出时清理进程 |
 
 ```mermaid
 sequenceDiagram
@@ -38,7 +40,6 @@ sequenceDiagram
     participant P as 控制页面
     participant S as 进程服务
     participant Q as QProcess
-    participant W as 主窗口
     U->>P: 点击启停按钮
     P->>S: start_frpc()
     S->>S: 检查路径与当前状态
@@ -46,7 +47,7 @@ sequenceDiagram
     S-->>P: 返回是否提交启动请求
     Q-->>S: started 或 errorOccurred
     S-->>P: state_changed / error_occurred
-    P-->>W: status_message_changed
+    P->>P: 更新状态标签和启停按钮
 ```
 
 服务的 `start_frpc()` 返回真，表示已经提交启动请求，不表示 FRP 已经成功连接远程服务器。`QProcess.started` 说明系统创建了子进程，也不等于该进程的业务准备全部完成。如果未来要显示“远程连接成功”，需要解析进程提供的协议、状态接口或可靠日志，定义另外一层业务状态。
@@ -59,7 +60,7 @@ sequenceDiagram
 
 控制页面中 `_syncing_switch` 用于区分“用户操作开关”与“代码同步开关显示”。后者也可能触发 `toggled`，如果无保护，就可能又发起启停命令。它是第 07 章反馈循环问题在真实项目中的例子。
 
-控制页面直接监听进程服务信号，更新原生按钮和状态提示，再通过 `status_message_changed` 将消息交给主窗口。
+控制页面直接监听进程服务信号，更新原生按钮和状态标签。错误也在对应页面的状态标签中显示，主窗口不创建状态栏或转发运行消息。
 
 ## 26.5 读配置与路径，而不是只看窗口
 

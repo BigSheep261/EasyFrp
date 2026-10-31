@@ -1,7 +1,6 @@
 """frps 手动进程控制与状态页面。"""
 
-# 导入 Qt 信号机制与构建进程控制页面所需的基础控件。
-from PyQt6.QtCore import pyqtSignal
+# 导入构建进程控制页面所需的基础控件。
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 # 进程服务封装 frps 的启动、停止、状态通知和错误提示。
@@ -10,9 +9,6 @@ from frp_gui.backend.frps.process_service import FrpsProcessService
 
 class FrpsControlView(QWidget):
     """直接管理 frps 手动启停控件，并将进程操作委托给后端服务。"""
-
-    # 页面内部的状态变化可通知外层页面或主窗口更新运行提示。
-    status_message_changed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """初始化进程服务、状态控件和信号连接。"""
@@ -27,6 +23,7 @@ class FrpsControlView(QWidget):
         # 状态标签以“未运行”为初始展示，并通过对象名应用徽标样式。
         self.status_label = QLabel("状态：未运行", self)
         self.status_label.setObjectName("statusBadge")
+        self.status_label.setWordWrap(True)
         # 开关文案随选中状态变化，为用户提供启动或停止入口。
         self.open_switch = QPushButton("启动 frps", self)
         self.open_switch.setCheckable(True)
@@ -114,7 +111,7 @@ class FrpsControlView(QWidget):
         self.open_switch.toggled.connect(self._handle_switch_toggled)
         # 服务状态变化驱动标签、开关选中态和可用态同步更新。
         self.frps_process_service.state_changed.connect(self._handle_frps_state_changed)
-        # 服务错误通知主窗口的状态栏。
+        # 服务错误直接显示在本页状态标签中。
         self.frps_process_service.error_occurred.connect(self._handle_frps_error)
 
     def _handle_switch_toggled(self, checked: bool) -> None:
@@ -132,7 +129,7 @@ class FrpsControlView(QWidget):
         self.stop_frps()
 
     def _handle_frps_state_changed(self, state: str) -> None:
-        """根据进程服务返回的内部状态更新页面和外层提示。"""
+        """根据进程服务返回的内部状态更新页面。"""
         # 将稳定的内部状态值映射为面向用户的中文文案。
         labels = {
             "stopped": "未运行",
@@ -142,9 +139,8 @@ class FrpsControlView(QWidget):
         }
         # 未知状态保留原值，便于诊断服务新增或异常状态。
         state_text = labels.get(state, state)
-        # 同步更新页面徽标，并向外层广播带进程名的状态消息。
+        # 同步更新页面状态，清除上一次操作的错误提示。
         self.status_label.setText(f"状态：{state_text}")
-        self.status_message_changed.emit(f"frps {state_text}")
 
         # 运行中：选中并启用开关，使下一次点击能够请求停止。
         if state == "running":
@@ -159,9 +155,9 @@ class FrpsControlView(QWidget):
             self.open_switch.setEnabled(False)
 
     def _handle_frps_error(self, message: str) -> None:
-        """将进程服务错误交给主窗口状态栏显示。"""
-        # 外层页面可使用同一消息更新全局运行提示。
-        self.status_message_changed.emit(message)
+        """保留当前进程状态，并在标签中显示最新错误。"""
+        state_text = self.status_label.text().split("\n", 1)[0]
+        self.status_label.setText(f"{state_text}\n错误：{message}")
 
     def _set_switch_checked(self, checked: bool) -> None:
         """由程序主动同步开关状态，避免触发业务逻辑。"""
