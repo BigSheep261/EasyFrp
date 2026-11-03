@@ -45,4 +45,3 @@ dependencies:
       # 让 PyInstaller 在非 Windows API 环境中处理相关类型。
       - pywin32-ctypes==0.2.3
       # 解析和写回 frpc、frps 的 TOML 配置。
-      - tomlkit==0.15.0

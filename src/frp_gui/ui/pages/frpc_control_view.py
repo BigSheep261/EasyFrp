@@ -1,79 +1,142 @@
-"""frpc 控制页面。
+"""frpc 手动进程控制与状态页面。"""
 
-pages 层表示“一个完整页面”。
-这个页面会导入 panels/frpc_open.py 中的 FrpcOpenPanel，
-然后负责设置标题、说明文案，以及把功能模块摆放到合适的位置。
-"""
+from PyQt6.QtWidgets import QWidget
 
-# Qt 信号和基础控件用于构建页面外壳并将内部状态传递给主窗口。
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
-
-# 控制面板封装 frpc 进程的启动、停止与运行状态管理。
-from frp_gui.ui.panels.frpc_open import FrpcOpenPanel
+from frp_gui.ui.generated.ui_frpc_control import Ui_Form
+# 进程服务封装 frpc 的启动、停止、状态通知和错误提示。
+from frp_gui.backend.frpc.process_service import FrpcProcessService
 
 
 class FrpcControlView(QWidget):
-    """组合 frpc 控制面板，并为主窗口提供启动与关闭入口。"""
-
-    # 页面把 panel 的状态消息继续向外转发。
-    # main_window 不需要知道 panel 内部结构，只监听页面信号即可。
-    status_message_changed = pyqtSignal(str)
+    """直接管理 frpc 手动启停控件，并将进程操作委托给后端服务。"""
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """初始化 frpc 控制页面及其业务面板。
-
-        Args:
-            parent: 负责管理当前页面生命周期的父级 Qt 控件。
-        """
-        # 建立 Qt 父子关系，使页面与主窗口共享生命周期。
+        """初始化进程服务、状态控件和信号连接。"""
+        # 完成 QWidget 基类初始化，使子控件和服务可托管在当前页面下。
         super().__init__(parent)
 
-        # 创建页面标题，并调整为适合一级标题的字体样式。
-        self.title_label = QLabel("FRP 客户端控制", self)
-        self.title_label.setObjectName("pageTitle")
-        title_font = self.title_label.font()
-        title_font.setPointSize(18)
-        title_font.setBold(True)
-        self.title_label.setFont(title_font)
+        # 进程服务负责真正的进程生命周期管理。
+        # 界面不直接操作 QProcess，而是调用进程服务公开的方法。
+        self.frpc_process_service = FrpcProcessService(parent=self)
 
-        # 告知用户默认使用的程序和配置路径，并支持自动换行。
-        self.description_label = QLabel(
-            "默认使用 runtime/frpc.exe 和 config/frpc.toml 启动客户端。",
-            self,
-        )
-        self.description_label.setObjectName("pageDescription")
-        self.description_label.setWordWrap(True)
+        # 当程序主动同步开关状态时，setChecked() 也会触发 toggled 信号。
+        # 这个标记用来区分“用户点击”和“程序同步状态”，避免递归触发启动/停止。
+        self._syncing_switch = False
 
-        # 实际的进程控制和状态展示由独立面板负责。
-        self.frpc_open_panel = FrpcOpenPanel(self)
-
-        # 将面板产生的运行消息转发到页面外部的统一提示区。
-        self.frpc_open_panel.status_message_changed.connect(
-            self.status_message_changed.emit
-        )
-
-        # 控件创建完成后统一组装页面布局。
+        # 使用 Designer 生成的代码创建界面，并绑定现有控件名称。
         self._build_ui()
 
-    def shutdown(self) -> None:
-        """让页面内的功能模块释放运行中的资源。"""
-        # 委托面板终止其管理的进程，避免窗口退出后留下后台任务。
-        self.frpc_open_panel.shutdown()
+        self._connect_signals()
 
     def start_frpc(self) -> bool:
-        """请求页面内的功能模块启动 frpc。"""
-        # 直接返回面板的启动结果，供自动运行流程判断是否成功。
-        return self.frpc_open_panel.start_frpc()
+        """由外部页面请求启动 frpc，并返回是否成功发起启动。"""
+        # 已运行时只修正界面状态，不重复创建进程。
+        if self.frpc_process_service.is_running():
+            self._set_switch_checked(True)
+            return False
+
+        # 启动结果尚未确定前禁用开关，防止连续点击产生并发请求。
+        self.open_switch.setEnabled(False)
+        # 服务拒绝或无法启动时恢复未选中状态及用户操作能力。
+        if not self.frpc_process_service.start_frpc():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        # 真正的运行状态稍后由服务的状态信号继续同步。
+        return True
+
+    def stop_frpc(self) -> bool:
+        """由外部页面请求停止 frpc，并返回是否成功发起停止。"""
+        # 停止结果尚未确定前禁用开关，防止用户重复提交请求。
+        self.open_switch.setEnabled(False)
+        # 无法发起停止时按服务当前约定恢复界面，并重新允许操作。
+        if not self.frpc_process_service.stop_frpc():
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+            return False
+        # 最终停止状态由后续状态信号负责更新。
+        return True
 
     def _build_ui(self) -> None:
-        """创建页面级布局。"""
-        # 外层纵向布局统一页面留白和各区域间距。
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 28, 28, 28)
-        layout.setSpacing(18)
+        """使用 Designer 生成的界面代码装配当前页面。"""
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
 
-        # 按标题、说明、操作面板的阅读顺序排列，并扩展操作区。
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.description_label)
-        layout.addWidget(self.frpc_open_panel, stretch=1)
+        # 为生成的控件保留原页面使用的属性名。
+        # 这样现有状态更新、按钮交互等方法可以继续使用。
+        self.title_label = self.ui.pageTitle
+        self.description_label = self.ui.pageDescription
+        self.status_label = self.ui.statusBadge
+        self.open_switch = self.ui.primaryButton
+
+    def _connect_signals(self) -> None:
+        """连接开关交互以及进程服务的状态和错误信号。"""
+        # 用户切换开关时进入统一处理器，以区分启动和停止操作。
+        self.open_switch.toggled.connect(self._handle_switch_toggled)
+        # 服务状态变化驱动标签、开关选中态和可用态同步更新。
+        self.frpc_process_service.state_changed.connect(self._handle_frpc_state_changed)
+        # 服务错误直接显示在本页状态标签中。
+        self.frpc_process_service.error_occurred.connect(self._handle_frpc_error)
+
+    def _handle_switch_toggled(self, checked: bool) -> None:
+        """用户点击开关后，启动或停止 frpc。"""
+        # 程序主动同步选中态时忽略伴随产生的 toggled 信号。
+        if self._syncing_switch:
+            return
+
+        # 选中表示请求启动；启动方法会在异步状态确定前管理开关可用性。
+        if checked:
+            self.start_frpc()
+            return
+
+        # 取消选中表示请求停止。
+        self.stop_frpc()
+
+    def _handle_frpc_state_changed(self, state: str) -> None:
+        """根据进程服务返回的内部状态更新页面。"""
+        # 将稳定的内部状态值映射为面向用户的中文文案。
+        labels = {
+            "stopped": "未运行",
+            "starting": "启动中",
+            "running": "运行中",
+            "stopping": "停止中",
+        }
+        # 未知状态保留原值，便于诊断服务新增或异常状态。
+        state_text = labels.get(state, state)
+        # 同步更新页面状态，清除上一次操作的错误提示。
+        self.status_label.setText(f"状态：{state_text}")
+
+        # 只有进入最终状态后才重新允许点击。
+        # 运行中：开关应该处于选中状态，下一次点击表示停止。
+        if state == "running":
+            self._set_switch_checked(True)
+            self.open_switch.setEnabled(True)
+        # 已停止：开关应该处于未选中状态，下一次点击表示启动。
+        elif state == "stopped":
+            self._set_switch_checked(False)
+            self.open_switch.setEnabled(True)
+        # 启动中或停止中都保持禁用，避免状态转换期间收到相反操作。
+        else:
+            self.open_switch.setEnabled(False)
+
+    def _handle_frpc_error(self, message: str) -> None:
+        """保留当前进程状态，并在标签中显示最新错误。"""
+        state_text = self.status_label.text().split("\n", 1)[0]
+        self.status_label.setText(f"{state_text}\n错误：{message}")
+
+    def _set_switch_checked(self, checked: bool) -> None:
+        """由程序主动同步开关状态，避免触发业务逻辑。"""
+        # 先开启同步保护，使 setChecked 触发的信号不会再次启动或停止进程。
+        self._syncing_switch = True
+        try:
+            # 按服务真实状态更新开关外观。
+            self.open_switch.setChecked(checked)
+            self.open_switch.setText("停止 frpc" if checked else "启动 frpc")
+        finally:
+            # 即使控件更新异常也必须解除保护，避免后续用户操作永久失效。
+            self._syncing_switch = False
+
+    def shutdown(self) -> None:
+        """页面关闭或应用退出时，停止正在运行的 frpc。"""
+        # 将退出清理委托给服务，避免 UI 层直接干预底层进程对象。
+        self.frpc_process_service.shutdown()
