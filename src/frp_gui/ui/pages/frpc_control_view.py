@@ -1,8 +1,8 @@
 """frpc 手动进程控制与状态页面。"""
 
-# 导入构建进程控制页面所需的基础控件。
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QWidget
 
+from frp_gui.ui.generated.ui_frpc_control import Ui_Form
 # 进程服务封装 frpc 的启动、停止、状态通知和错误提示。
 from frp_gui.backend.frpc.process_service import FrpcProcessService
 
@@ -23,24 +23,10 @@ class FrpcControlView(QWidget):
         # 这个标记用来区分“用户点击”和“程序同步状态”，避免递归触发启动/停止。
         self._syncing_switch = False
 
-        # 状态标签以“未运行”为初始展示，并通过对象名应用徽标样式。
-        self.status_label = QLabel("状态：未运行", self)
-        self.status_label.setObjectName("statusBadge")
-        self.status_label.setWordWrap(True)
-        # 开关文案随选中状态变化，为用户提供启动或停止入口。
-        self.open_switch = QPushButton("启动 frpc", self)
-        self.open_switch.setCheckable(True)
-        self.open_switch.setObjectName("primaryButton")
-        self.open_switch.setMinimumWidth(144)
-
-        # 控件创建完成后再组织布局并建立事件连接。
+        # 使用 Designer 生成的代码创建界面，并绑定现有控件名称。
         self._build_ui()
-        self._connect_signals()
 
-    def shutdown(self) -> None:
-        """页面关闭或应用退出时，停止正在运行的 frpc。"""
-        # 将退出清理委托给服务，避免 UI 层直接干预底层进程对象。
-        self.frpc_process_service.shutdown()
+        self._connect_signals()
 
     def start_frpc(self) -> bool:
         """由外部页面请求启动 frpc，并返回是否成功发起启动。"""
@@ -72,41 +58,16 @@ class FrpcControlView(QWidget):
         return True
 
     def _build_ui(self) -> None:
-        """创建本页面布局。"""
-        # 主布局纵向排列标题与控制区，并保留统一页面边距。
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(28, 28, 28, 28)
-        main_layout.setSpacing(18)
+        """使用 Designer 生成的界面代码装配当前页面。"""
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
 
-        # 页面直接承载标题和业务控件，直接调用后端服务。
-        self.title_label = QLabel('FRP 客户端控制', self)
-        self.title_label.setObjectName("pageTitle")
-        title_font = self.title_label.font()
-        title_font.setPointSize(18)
-        title_font.setBold(True)
-        self.title_label.setFont(title_font)
-        self.description_label = QLabel('默认使用 runtime/frpc.exe 和 config/frpc.toml 启动客户端。', self)
-        self.description_label.setObjectName("pageDescription")
-        self.description_label.setWordWrap(True)
-        main_layout.addWidget(self.title_label)
-        main_layout.addWidget(self.description_label)
-
-        # 控制框架集中承载状态徽标与启动开关，并提供统一表面样式。
-        control_frame = QFrame(self)
-        control_frame.setObjectName("controlSurface")
-        control_frame.setFrameShape(QFrame.Shape.StyledPanel)
-
-        # 水平布局把状态放在左侧、开关推到右侧。
-        control_layout = QHBoxLayout(control_frame)
-        control_layout.setContentsMargins(18, 16, 18, 16)
-        control_layout.setSpacing(12)
-        control_layout.addWidget(self.status_label)
-        control_layout.addStretch()
-        control_layout.addWidget(self.open_switch)
-
-        # 多余空间留在底部，保持控制区靠上排列。
-        main_layout.addWidget(control_frame)
-        main_layout.addStretch()
+        # 为生成的控件保留原页面使用的属性名。
+        # 这样现有状态更新、按钮交互等方法可以继续使用。
+        self.title_label = self.ui.pageTitle
+        self.description_label = self.ui.pageDescription
+        self.status_label = self.ui.statusBadge
+        self.open_switch = self.ui.primaryButton
 
     def _connect_signals(self) -> None:
         """连接开关交互以及进程服务的状态和错误信号。"""
@@ -174,3 +135,8 @@ class FrpcControlView(QWidget):
         finally:
             # 即使控件更新异常也必须解除保护，避免后续用户操作永久失效。
             self._syncing_switch = False
+
+    def shutdown(self) -> None:
+        """页面关闭或应用退出时，停止正在运行的 frpc。"""
+        # 将退出清理委托给服务，避免 UI 层直接干预底层进程对象。
+        self.frpc_process_service.shutdown()

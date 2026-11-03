@@ -4,10 +4,8 @@
 from enum import Enum
 # 路径对象用于保存可执行文件和配置文件位置。
 from pathlib import Path
-
 # Qt 的进程、计时器和信号机制使外部程序控制不会阻塞界面线程。
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
-
 # 默认运行时目录和配置目录遵循项目统一路径约定。
 from frp_gui.utils.paths import CONFIG_DIR, RUNTIME_DIR
 
