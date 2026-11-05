@@ -1,36 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Frpc_Control_Form</class>
+ <widget class="QWidget" name="Frpc_Control_Form">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>820</width>
-    <height>640</height>
+    <width>822</width>
+    <height>645</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>680</width>
+    <height>560</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>FRP 客户端控制</string>
   </property>
-  <layout class="QVBoxLayout" name="mainLayout">
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
+  <layout class="QVBoxLayout" name="Frpc_Control_Layout_Main" stretch="0,0,1">
    <property name="spacing">
-    <number>18</number>
+    <number>24</number>
    </property>
    <property name="leftMargin">
-    <number>28</number>
+    <number>32</number>
    </property>
    <property name="topMargin">
-    <number>28</number>
+    <number>32</number>
    </property>
    <property name="rightMargin">
-    <number>28</number>
+    <number>32</number>
    </property>
    <property name="bottomMargin">
-    <number>28</number>
+    <number>32</number>
    </property>
    <item>
-    <widget class="QLabel" name="pageTitle">
+    <widget class="QLabel" name="Frpc_Control_Label_Title">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>44</height>
+      </size>
+     </property>
      <property name="font">
       <font>
        <pointsize>18</pointsize>
@@ -38,95 +56,276 @@
       </font>
      </property>
      <property name="text">
-      <string>FRP 客户端控制</string>
+      <string>FRP-C 控制台</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="pageDescription">
-     <property name="text">
-      <string>默认使用 runtime/frpc.exe 和 config/frpc.toml 启动客户端。</string>
+    <layout class="QHBoxLayout" name="Frpc_Control_Layout_Status" stretch="1,1,1">
+     <property name="spacing">
+      <number>24</number>
      </property>
-     <property name="wordWrap">
-      <bool>true</bool>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
+     <item>
+      <widget class="QFrame" name="Frpc_Control_Frame_ProcessStatus">
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Shape::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Shadow::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="Frpc_Control_Layout_ProcessStatus" stretch="0,1">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>18</number>
+        </property>
+        <property name="topMargin">
+         <number>18</number>
+        </property>
+        <property name="rightMargin">
+         <number>18</number>
+        </property>
+        <property name="bottomMargin">
+         <number>18</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="Frpc_Control_Label_ProcessTitle">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>进程状态</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="Frpc_Control_Label_ProcessStatus">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>未运行</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="Frpc_Control_Frame_ConnectStatus">
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Shape::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Shadow::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="Frpc_Control_Layout_ConnectStatus" stretch="0,1">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>18</number>
+        </property>
+        <property name="topMargin">
+         <number>18</number>
+        </property>
+        <property name="rightMargin">
+         <number>18</number>
+        </property>
+        <property name="bottomMargin">
+         <number>18</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="Frpc_Control_Label_ConnectTitle">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>连接状态</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="Frpc_Control_Label_ConnectStatus">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>离线</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="Frpc_Control_Frame_StartControl">
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>160</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Shape::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Shadow::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="Frpc_Control_Layout_StartControl">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>18</number>
+        </property>
+        <property name="topMargin">
+         <number>18</number>
+        </property>
+        <property name="rightMargin">
+         <number>18</number>
+        </property>
+        <property name="bottomMargin">
+         <number>18</number>
+        </property>
+        <item>
+         <spacer name="controlTopSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Frpc_Control_Button_Start">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>启动</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="Frpc_Control_Label_StartTime">
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>已连接 00:00:00</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="controlBottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QFrame" name="controlSurface">
-     <property name="frameShape">
-      <enum>QFrame::Shape::StyledPanel</enum>
-     </property>
-     <layout class="QHBoxLayout" name="controlLayout">
-      <property name="spacing">
-       <number>12</number>
-      </property>
-      <property name="leftMargin">
-       <number>18</number>
-      </property>
-      <property name="topMargin">
-       <number>16</number>
-      </property>
-      <property name="rightMargin">
-       <number>18</number>
-      </property>
-      <property name="bottomMargin">
-       <number>16</number>
-      </property>
-      <item>
-       <widget class="QLabel" name="statusBadge">
-        <property name="text">
-         <string>状态：未运行</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="controlSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="primaryButton">
-        <property name="minimumSize">
-         <size>
-          <width>144</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>启动 frpc</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <spacer name="bottomSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+    <widget class="QPlainTextEdit" name="Frpc_Control_PlainTextEdit_Log">
+     <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>0</height>
+       <height>220</height>
       </size>
      </property>
-    </spacer>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="maximumBlockCount">
+      <number>5000</number>
+     </property>
+     <property name="placeholderText">
+      <string>等待 FRPC 日志…</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
