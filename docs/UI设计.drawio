@@ -1,0 +1,48 @@
+<mxfile host="drawio-plugin" modified="2026-11-06T06:34:15.674Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" etag="NAtpmPdp0ZGDqUzSl6Hm" version="22.1.22" type="embed" pages="2">
+  <diagram id="aEhzD2EBvdp6o5Z2Yzeb" name="页面UI图标设计">
+    <mxGraphModel dx="524" dy="381" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Frpc控制页面" id="4iBv1GZRcWXwl7eIe416">
+    <mxGraphModel dx="524" dy="381" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="KxWySTDqwJKqNEPFfSLK-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="120" y="40" width="520" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-4" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;FRP-C 控制台&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="160" y="80" width="150" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-7" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="160" y="150" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-8" value="启动按钮，启动后显示连接时长" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="480" y="150" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-9" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="320" y="150" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-10" value="日志信息" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="160" y="290" width="440" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-14" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;进程状态&lt;/h1&gt;&lt;p&gt;未运行&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;／&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;启动中&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;／&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;运行中&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;／&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;停止中&lt;/span&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="160" y="150" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5OaUrQmAFQin1SDz4KLe-15" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;连接状态&lt;/h1&gt;&lt;p&gt;离线／连接中／在线／重连中&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="320" y="150" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="la0YrsQMTvcetL6cjGHe-1" value="进程状态" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;align=center;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="770" y="50" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="la0YrsQMTvcetL6cjGHe-2" value="主要检测frpc的运行状态，启动时会先检查一下对应路径下有没有exe，之后根据运行状态切换显示&lt;br&gt;" style="text;strokeColor=none;fillColor=none;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;whiteSpace=wrap;html=1;" parent="la0YrsQMTvcetL6cjGHe-1" vertex="1">
+          <mxGeometry y="26" width="160" height="74" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
