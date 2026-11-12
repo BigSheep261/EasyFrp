@@ -18,9 +18,9 @@ class FrpcControlView(QWidget):
         self._build_ui()
         self._connect_signals()
 
-    def start_frpc(self) -> bool:
-        """由外部页面请求启动 frpc，并返回是否成功发起启动。"""
-        self.frpc_process_service.start_frpc()
+    def switch_frpc_state(self) -> bool:
+        """切换frpc的启动状态"""
+        self.frpc_process_service.switch_frpc_state()
         return True
 
     def _build_ui(self) -> None:
@@ -31,7 +31,7 @@ class FrpcControlView(QWidget):
 
     def _connect_signals(self) -> None:
         """连接开关交互以及进程服务的状态和错误信号。"""
-        self.ui.Frpc_Control_Button_Start.clicked.connect(self.start_frpc)
+        self.ui.Frpc_Control_Button_Start.clicked.connect(self.switch_frpc_state)
 
     def shutdown(self) -> None:
         """页面关闭或应用退出时，停止正在运行的 frpc。"""

@@ -1,5 +1,7 @@
 """frpc 子进程生命周期管理服务。"""
 from enum import Enum
+from unittest import case
+
 # Qt 的进程、计时器和信号机制使外部程序控制不会阻塞界面线程。
 from PyQt6.QtCore import QObject, QProcess, QTimer, pyqtSignal
 # 默认运行时目录和配置目录遵循项目统一路径约定。
@@ -50,6 +52,30 @@ class FrpcProcessService(QObject):
         self._process.stateChanged.connect(self._handle_state_change)
 
 
+    def switch_frpc_state(self):
+        """切换frpc的启动状态"""
+        match self._process.state():
+            case QProcess.ProcessState.NotRunning:
+                # TODO::切换到启动状态
+                self.start_frpc()
+
+            case QProcess.ProcessState.Running:
+                # TODO::切换到关闭状态
+                self.stop_frpc()
+
+            case _:
+                # TODO::启动中/关闭中，不进行处理
+                print("未知状态")
+
+    def _handle_state_change(self):
+        match self._process_state:
+            case QProcess.ProcessState.NotRunning:
+                return
+            case QProcess.ProcessState.Running:
+                return
+            case _:
+                return
+
 
     def start_frpc(self) -> bool:
         """使用配置好的可执行文件和配置文件启动 frpc。"""
@@ -74,9 +100,6 @@ class FrpcProcessService(QObject):
     @property
     def connect_state(self) -> FrpCStateEnum:
         return self._connect_state
-
-    def _handle_state_change(self):
-        self._process.state()
 
     def shutdown(self, timeout_ms: int = 3000) -> None:
         self._process.terminate()
